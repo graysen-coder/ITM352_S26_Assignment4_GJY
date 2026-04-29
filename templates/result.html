@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head><title>Wave {{ result.wave_num }} Result</title></head>
+<body>
+    <h2>Wave {{ result.wave_num }} — {{ "WIN" if result.wave_won else "LOSS" }}</h2>
+    <p>Score: {{ score }}</p>
+
+    {% if result.synergy_bonus > 1.0 %}
+    <p>Synergy bonus active: x{{ result.synergy_bonus }}</p>
+    {% endif %}
+
+    <h3>Matchups</h3>
+    <ul>
+        {% for m in result.matchups %}
+        <li>
+            {{ m.native }} (power {{ m.native_power }}) vs {{ m.invader }} (power {{ m.invader_power }})
+            — {{ m.winner }} wins
+        </li>
+        {% endfor %}
+    </ul>
+
+    {% if facts %}
+    <h3>Did You Know?</h3>
+    <ul>
+        {% for f in facts %}
+        <li><strong>{{ f.species }}:</strong> {{ f.fact }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% if game_over %}
+    <p><strong>Game Over!</strong></p>
+    <a href="/end">See Final Results</a>
+    {% else %}
+    <form action="/next" method="post">
+        <button type="submit">Next Wave</button>
+    </form>
+    {% endif %}
+</body>
+</html>

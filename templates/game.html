@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head><title>Wave {{ wave_num }}</title></head>
+<body>
+    <h2>Wave {{ wave_num }} — Difficulty {{ difficulty }}</h2>
+    <p>Score: {{ score }}</p>
+
+    <h3>Incoming Invaders</h3>
+    <ul>
+        {% for invader in invaders %}
+        <li>
+            <strong>{{ invader.name }}</strong> —
+            attack: {{ invader.attack }},
+            hp: {{ invader.health }}
+        </li>
+        {% endfor %}
+    </ul>
+
+    <h3>Choose Your Defenders (pick up to {{ max_defenders }})</h3>
+    <form action="/resolve" method="post">
+        {% for native in natives %}
+        <label>
+            <input type="checkbox" name="natives" value="{{ native.name }}">
+            <strong>{{ native.name }}</strong> —
+            attack: {{ native.attack }},
+            hp: {{ native.health }},
+            resistances: {{ native.resistance }}
+        </label><br>
+        {% endfor %}
+        <br>
+        <button type="submit">Defend</button>
+    </form>
+</body>
+</html>

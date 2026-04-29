@@ -1,0 +1,66 @@
+[
+    {
+        "name": "nene",
+        "health": 80,
+        "attack": 30,
+        "resistance": {"mongoose": 1.4, "default": 1.0},
+        "is_invasive": false,
+        "facts": ["The nene is Hawaii's state bird.", "Nearly went extinct in the 1950s."]
+    },
+    {
+        "name": "pueo",
+        "health": 70,
+        "attack": 35,
+        "resistance": {"rat": 1.5, "default": 1.0},
+        "is_invasive": false,
+        "facts": ["The pueo is the Hawaiian short-eared owl.", "Considered an aumakua (spiritual guardian) in Hawaiian culture."]
+    },
+    {
+        "name": "ohia",
+        "health": 100,
+        "attack": 20,
+        "resistance": {"default": 1.1},
+        "is_invasive": false,
+        "facts": ["The ohia lehua is one of Hawaii's most iconic native trees.", "First plant to grow on new lava flows."]
+    },
+    {
+        "name": "silversword",
+        "health": 60,
+        "attack": 25,
+        "resistance": {"feral_pig": 1.6, "default": 1.0},
+        "is_invasive": false,
+        "facts": ["The silversword only grows on Haleakala and Mauna Kea.", "Takes up to 50 years to bloom, then dies."]
+    },
+    {
+        "name": "mongoose",
+        "health": 60,
+        "attack": 40,
+        "resistance": {"default": 1.0},
+        "is_invasive": true,
+        "facts": []
+    },
+    {
+        "name": "rat",
+        "health": 50,
+        "attack": 35,
+        "resistance": {"default": 1.0},
+        "is_invasive": true,
+        "facts": []
+    },
+    {
+        "name": "feral_pig",
+        "health": 90,
+        "attack": 45,
+        "resistance": {"default": 1.0},
+        "is_invasive": true,
+        "facts": []
+    },
+    {
+        "name": "strawberry_guava",
+        "health": 70,
+        "attack": 30,
+        "resistance": {"default": 1.0},
+        "is_invasive": true,
+        "facts": []
+    }
+]

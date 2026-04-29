@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head><title>Game Over</title></head>
+<body>
+    <h2>Game Over — Final Score: {{ score }}</h2>
+    <p>You reached wave {{ wave_num }}.</p>
+
+    <h3>Run Summary</h3>
+    <ul>
+        {% for wave in run_history %}
+        <li>Wave {{ wave.wave_num }}: {{ "WIN" if wave.wave_won else "LOSS" }} — {{ wave.native_wins }} native wins, {{ wave.invader_wins }} invader wins</li>
+        {% endfor %}
+    </ul>
+
+    <a href="/">Play Again</a>
+</body>
+</html>
