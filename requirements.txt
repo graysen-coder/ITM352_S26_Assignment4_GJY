@@ -1,0 +1,9 @@
+beautifulsoup4
+flask
+jinja2
+lxml
+matplotlib
+pandas
+python-dotenv
+requests
+seaborn
