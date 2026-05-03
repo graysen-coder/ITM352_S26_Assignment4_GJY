@@ -1,0 +1,62 @@
+[
+  {
+    "name": "coqui-frog",
+    "health": 66,
+    "attack": 27,
+    "resistance": { "default": 1.0 },
+    "is_invasive": true,
+    "facts": [
+      "Coqui (Eleutherodactylus coqui) — https://dlnr.hawaii.gov/hisc/coqui-frog"
+    ]
+  },
+  {
+    "name": "coconut-rhinoceros-beetle",
+    "health": 79,
+    "attack": 58,
+    "resistance": { "default": 1.0 },
+    "is_invasive": true,
+    "facts": [
+      "Coconut Rhinoceros Beetle (Oryctes rhinoceros) — https://dlnr.hawaii.gov/hisc/info/invasive-species-profiles/coconut-rhinoceros-beetle"
+    ]
+  },
+  {
+    "name": "miconia-calvescens",
+    "health": 86,
+    "attack": 29,
+    "resistance": { "default": 1.0 },
+    "is_invasive": true,
+    "facts": [
+      "Miconia (Miconia calvescens) — https://dlnr.hawaii.gov/hisc/miconia-calvescens"
+    ]
+  },
+  {
+    "name": "little-fire-ant-lfa",
+    "health": 97,
+    "attack": 49,
+    "resistance": { "default": 1.0 },
+    "is_invasive": true,
+    "facts": [
+      "Little Fire Ant (Wasmannia auropunctata) — https://dlnr.hawaii.gov/hisc/little-fire-ant-lfa"
+    ]
+  },
+  {
+    "name": "naio-thrips",
+    "health": 78,
+    "attack": 24,
+    "resistance": { "default": 1.0 },
+    "is_invasive": true,
+    "facts": [
+      "Naio Thrips (Klambothrips myopori) — https://dlnr.hawaii.gov/hisc/info/species/naio-thrips"
+    ]
+  },
+  {
+    "name": "mongoose-urva-auropunctata",
+    "health": 96,
+    "attack": 25,
+    "resistance": { "default": 1.0 },
+    "is_invasive": true,
+    "facts": [
+      "Mongoose (Herpestes javanicus) — https://dlnr.hawaii.gov/hisc/mongoose-urva-auropunctata"
+    ]
+  }
+]

@@ -1,0 +1,63 @@
+[
+  {
+    "name": "nene",
+    "health": 80,
+    "attack": 30,
+    "resistance": { "default": 1.0 },
+    "is_invasive": false,
+    "facts": [
+      "The nēnē is Hawaii's state bird.",
+      "Nearly went extinct in the 1950s."
+    ]
+  },
+  {
+    "name": "pueo",
+    "health": 70,
+    "attack": 36,
+    "resistance": { "default": 1.0 },
+    "is_invasive": false,
+    "facts": [
+      "The pueo is a Hawaiian short-eared owl (Asio flammeus sandwichensis)."
+    ]
+  },
+  {
+    "name": "silversword",
+    "health": 52,
+    "attack": 22,
+    "resistance": { "default": 1.0 },
+    "is_invasive": false,
+    "facts": [
+      "Found high on Haleakalā and Mauna Kea; many species are endangered."
+    ]
+  },
+  {
+    "name": "ohia",
+    "health": 68,
+    "attack": 26,
+    "resistance": { "default": 1.0 },
+    "is_invasive": false,
+    "facts": [
+      "Foundation tree for many native forests; threatened by Rapid ʻŌhiʻa Death."
+    ]
+  },
+  {
+    "name": "iiwi",
+    "health": 56,
+    "attack": 24,
+    "resistance": { "default": 1.0 },
+    "is_invasive": false,
+    "facts": [
+      "Scarlet honeycreeper; its curved bill matches native flowers."
+    ]
+  },
+  {
+    "name": "honu",
+    "health": 92,
+    "attack": 20,
+    "resistance": { "default": 1.0 },
+    "is_invasive": false,
+    "facts": [
+      "Green sea turtle; protected in Hawaii waters."
+    ]
+  }
+]
