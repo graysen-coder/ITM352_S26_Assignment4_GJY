@@ -15,8 +15,9 @@ def get_all_species():
 
 @app.route("/")
 def home():
-    return render_template("home.html")
-
+    background_image = url_for("static", filename="background.png")
+    title_image = url_for("static", filename="title.png")
+    return render_template("home.html", bg_pic=background_image, title_pic=title_image)
 
 @app.route("/start", methods=["POST"])
 def start():
