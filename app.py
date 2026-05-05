@@ -5,7 +5,6 @@ app = Flask(__name__)
 app.secret_key = "kiai-aina-dev-key"
 
 MAX_WAVES = 10
-MAX_CONSECUTIVE_LOSSES = 3
 TEAM_SIZE = 3
 
 
@@ -25,7 +24,49 @@ def start():
     session["wave_num"] = 1
     session["score"] = 0
     session["run_history"] = []
-    session["consecutive_losses"] = 0
+    return redirect(url_for("choose_home"))
+
+
+HOME_SPECIES = [
+    {
+        "name": "Nēnē",
+        "scientific": "Branta sandvicensis",
+        "key": "nene",
+        "image": "nene_bird_pic.jpg",
+        "placeholder": "information placeholder",
+    },
+    {
+        "name": "ʻAlalā",
+        "scientific": "Corvus hawaiiensis",
+        "key": "alala",
+        "image": "alala_bird_pic.jpg",
+        "placeholder": "information placeholder",
+    },
+    {
+        "name": "ʻŌpeʻapeʻa",
+        "scientific": "Lasiurus semotus",
+        "key": "opeapea",
+        "image": "opeapea_bat_pic.jpg",
+        "placeholder": "information placeholder",
+    },
+]
+
+
+@app.route("/choose-home", methods=["GET"])
+def choose_home():
+    if "wave_num" not in session:
+        return redirect(url_for("home"))
+    return render_template("choose_home.html", species=HOME_SPECIES)
+
+
+@app.route("/choose-home", methods=["POST"])
+def choose_home_post():
+    if "wave_num" not in session:
+        return redirect(url_for("home"))
+    chosen = request.form.get("home_species")
+    if not chosen:
+        return redirect(url_for("choose_home"))
+    session["home_species"] = chosen
     return redirect(url_for("game"))
 
 
@@ -126,11 +167,6 @@ def battle_action():
         points = score_for_wave(state)
         session["score"] = session.get("score", 0) + points
 
-        if not state["player_won"]:
-            session["consecutive_losses"] = session.get("consecutive_losses", 0) + 1
-        else:
-            session["consecutive_losses"] = 0
-
         history = session.get("run_history", [])
         history.append({
             "wave_num": state["wave_num"],
@@ -139,10 +175,7 @@ def battle_action():
         })
         session["run_history"] = history
 
-        game_over = (
-            session["consecutive_losses"] >= MAX_CONSECUTIVE_LOSSES
-            or session["wave_num"] >= MAX_WAVES
-        )
+        game_over = not state["player_won"] or session["wave_num"] >= MAX_WAVES
         session["game_over"] = game_over
 
         # Collect invader facts for result screen

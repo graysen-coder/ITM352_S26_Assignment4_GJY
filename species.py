@@ -2,6 +2,7 @@
 # This file defines the Species class to represent both native and invasive species,
 # along with their attributes and interactions, also defines a wave class to contain the
 # invasive species that will attack the native species in each wave of the game.
+# There is also a move class that will represent the different moves that each species can use in battle, with their damage, attributes, and energy cost.
 # Used Claude Sonnet 4.6 to generate initial code structure specifying name, health, attack, resistance, whether its invasive or not
 # and facts about the species
 

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Choose Your Home — Kia'i 'Aina</title>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; }
+    h1, h2 { color: #2d6a4f; }
+    .subtitle { color: #555; margin: 8px 0 24px; }
+
+    .cards {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 20px;
+      margin: 20px 0;
+      justify-content: center;
+    }
+
+    .species-card {
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      padding: 16px;
+      width: 220px;
+      cursor: pointer;
+      transition: border-color 0.2s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .species-card input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .species-card:has(input:checked) {
+      border-color: #2d6a4f;
+      background: #f0faf4;
+    }
+
+    .species-card:hover { border-color: #2d6a4f; }
+
+    .species-img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      border-radius: 4px;
+      margin-bottom: 12px;
+    }
+
+    .species-name {
+      font-size: 1.1em;
+      font-weight: bold;
+      margin-bottom: 2px;
+    }
+
+    .species-scientific {
+      font-size: 0.82em;
+      font-style: italic;
+      color: #777;
+      margin-bottom: 10px;
+    }
+
+    .species-info { font-size: 0.82em; color: #555; line-height: 1.5; }
+
+    .selected-indicator {
+      display: none;
+      margin-top: 8px;
+      font-size: 0.8em;
+      color: #2d6a4f;
+      font-weight: bold;
+    }
+
+    .species-card:has(input:checked) .selected-indicator { display: block; }
+
+    .btn {
+      background: #2d6a4f;
+      color: white;
+      border: none;
+      padding: 12px 28px;
+      font-size: 1em;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 16px;
+    }
+
+    .btn:hover { background: #1b4332; }
+  </style>
+</head>
+<body>
+  <h1>Kia'i 'Aina</h1>
+  <h2>Choose Your Home</h2>
+  <p class="subtitle">Select a critically endangered native species to protect. You will defend their home from every wave of invaders.</p>
+
+  <form action="/choose-home" method="post">
+    <div class="cards">
+      {% for s in species %}
+      <label class="species-card">
+        <input type="radio" name="home_species" value="{{ s.key }}" {% if loop.first %}required{% endif %}>
+        <img class="species-img" src="{{ url_for('static', filename=s.image) }}" alt="{{ s.name }}">
+        <div class="species-name">{{ s.name }}</div>
+        <div class="species-scientific">{{ s.scientific }}</div>
+        <div class="species-info">{{ s.placeholder }}</div>
+        <div class="selected-indicator">✓ Selected</div>
+      </label>
+      {% endfor %}
+    </div>
+    <button class="btn" type="submit">Defend This Home</button>
+  </form>
+</body>
+</html>

@@ -56,8 +56,8 @@
   {% endif %}
 
   {% if game_over %}
-  <p><strong>Game Over!</strong> You can't take any more losses.</p>
-  <a href="/end"><button class="btn btn-danger">See Final Score</button></a>
+  <p><strong>Your defenders have fallen.</strong> The invasive species have taken over.</p>
+  <a href="/end"><button class="btn btn-danger">See What Happened</button></a>
   {% else %}
   <form action="/next" method="post">
     <button class="btn" type="submit">Next Wave &rarr;</button>
