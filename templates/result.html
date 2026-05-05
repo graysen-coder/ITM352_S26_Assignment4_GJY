@@ -1,40 +1,67 @@
 <!DOCTYPE html>
 <html>
-<head><title>Wave {{ result.wave_num }} Result</title></head>
+<head>
+  <title>Wave {{ state.wave_num }} Result</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 0 20px; }
+    h1, h2 { color: #2d6a4f; }
+    .result-banner {
+      font-size: 1.6em; font-weight: bold; padding: 16px; border-radius: 8px;
+      text-align: center; margin-bottom: 24px;
+    }
+    .win  { background: #d4edda; color: #155724; }
+    .loss { background: #f8d7da; color: #721c24; }
+    .team-summary { margin-bottom: 20px; }
+    .team-summary h3 { margin-bottom: 8px; }
+    .member-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #eee; font-size: 0.9em; text-transform: capitalize; }
+    .facts-box { background: #f0faf4; border-left: 4px solid #2d6a4f; padding: 12px 16px; margin-bottom: 24px; font-size: 0.9em; }
+    .facts-box h3 { margin-top: 0; }
+    .score-line { font-size: 1.1em; margin-bottom: 20px; }
+    .btn {
+      background: #2d6a4f; color: white; border: none; padding: 12px 28px;
+      font-size: 1em; border-radius: 6px; cursor: pointer;
+    }
+    .btn:hover { background: #1b4332; }
+    .btn-danger { background: #c0392b; }
+    .btn-danger:hover { background: #922b21; }
+  </style>
+</head>
 <body>
-    <h2>Wave {{ result.wave_num }} — {{ "WIN" if result.wave_won else "LOSS" }}</h2>
-    <p>Score: {{ score }}</p>
+  <h1>Kia'i 'Aina</h1>
+  <h2>Wave {{ state.wave_num }} Result</h2>
 
-    {% if result.synergy_bonus > 1.0 %}
-    <p>Synergy bonus active: x{{ result.synergy_bonus }}</p>
-    {% endif %}
+  <div class="result-banner {% if state.player_won %}win{% else %}loss{% endif %}">
+    {% if state.player_won %}Victory! All invaders repelled.{% else %}Defeat. The wave broke through.{% endif %}
+  </div>
 
-    <h3>Matchups</h3>
-    <ul>
-        {% for m in result.matchups %}
-        <li>
-            {{ m.native }} (power {{ m.native_power }}) vs {{ m.invader }} (power {{ m.invader_power }})
-            — {{ m.winner }} wins
-        </li>
-        {% endfor %}
-    </ul>
+  <div class="score-line">Score: <strong>{{ score }}</strong></div>
 
-    {% if facts %}
+  <div class="team-summary">
+    <h3>Your Team</h3>
+    {% for member in state.team %}
+    <div class="member-row">
+      <span>{{ member.name }}</span>
+      <span>{{ member.hp }} / {{ member.max_hp }} HP {% if member.hp == 0 %}(fainted){% endif %}</span>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% if facts %}
+  <div class="facts-box">
     <h3>Did You Know?</h3>
-    <ul>
-        {% for f in facts %}
-        <li><strong>{{ f.species }}:</strong> {{ f.fact }}</li>
-        {% endfor %}
-    </ul>
-    {% endif %}
+    {% for f in facts %}
+    <p><strong>{{ f.species }}:</strong> {{ f.fact }}</p>
+    {% endfor %}
+  </div>
+  {% endif %}
 
-    {% if game_over %}
-    <p><strong>Game Over!</strong></p>
-    <a href="/end">See Final Results</a>
-    {% else %}
-    <form action="/next" method="post">
-        <button type="submit">Next Wave</button>
-    </form>
-    {% endif %}
+  {% if game_over %}
+  <p><strong>Game Over!</strong> You can't take any more losses.</p>
+  <a href="/end"><button class="btn btn-danger">See Final Score</button></a>
+  {% else %}
+  <form action="/next" method="post">
+    <button class="btn" type="submit">Next Wave &rarr;</button>
+  </form>
+  {% endif %}
 </body>
 </html>

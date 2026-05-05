@@ -1,34 +1,74 @@
 <!DOCTYPE html>
 <html>
-<head><title>Wave {{ wave_num }}</title></head>
+<head>
+  <title>Wave {{ wave_num }} — Choose Your Team</title>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; }
+    h1, h2 { color: #2d6a4f; }
+    .species-grid { display: flex; flex-wrap: wrap; gap: 16px; margin: 20px 0; }
+    .species-card {
+      border: 2px solid #ccc; border-radius: 8px; padding: 16px; width: 220px;
+      cursor: pointer; transition: border-color 0.2s;
+    }
+    .species-card:has(input:checked) { border-color: #2d6a4f; background: #f0faf4; }
+    .species-card input { margin-right: 8px; }
+    .species-name { font-size: 1.1em; font-weight: bold; text-transform: capitalize; }
+    .species-stats { font-size: 0.85em; color: #555; margin: 6px 0; }
+    .traits { font-size: 0.78em; margin: 6px 0 4px; line-height: 1.6; }
+    .traits .strong { color: #1b7c3e; }
+    .traits .weak { color: #b03a2e; }
+    .moves-list { font-size: 0.8em; margin-top: 8px; padding-left: 0; list-style: none; }
+    .moves-list li { padding: 3px 0; color: #333; }
+    .move-cost { color: #888; }
+    .btn {
+      background: #2d6a4f; color: white; border: none; padding: 12px 28px;
+      font-size: 1em; border-radius: 6px; cursor: pointer; margin-top: 16px;
+    }
+    .btn:hover { background: #1b4332; }
+    .score-bar { color: #555; margin-bottom: 8px; }
+  </style>
+</head>
 <body>
-    <h2>Wave {{ wave_num }} — Difficulty {{ difficulty }}</h2>
-    <p>Score: {{ score }}</p>
+  <h1>Kia'i 'Aina</h1>
+  <div class="score-bar">Wave {{ wave_num }} &nbsp;|&nbsp; Score: {{ score }}</div>
+  <h2>Choose {{ team_size }} Defenders</h2>
+  <p>Pick up to {{ team_size }} native species to fight for this wave. Consider their HP, and which moves fit your strategy.</p>
 
-    <h3>Incoming Invaders</h3>
-    <ul>
-        {% for invader in invaders %}
-        <li>
-            <strong>{{ invader.name }}</strong> —
-            attack: {{ invader.attack }},
-            hp: {{ invader.health }}
-        </li>
-        {% endfor %}
-    </ul>
+  <form action="/battle/start" method="post">
+    <div class="species-grid">
+      {% for s in natives %}
+      <label class="species-card">
+        <div>
+          <input type="checkbox" name="natives" value="{{ s.name }}" onclick="enforceLimit(this)">
+          <span class="species-name">{{ s.name }}</span>
+        </div>
+        <div class="species-stats">
+          HP: {{ s.health }} &nbsp;|&nbsp; ATK: {{ s.attack }}
+        </div>
+        <div class="traits">
+          <span class="strong">💪 {{ s.strong_against | join(', ') }}</span><br>
+          <span class="weak">⚠️ {{ s.weak_to | join(', ') }}</span>
+        </div>
+        <ul class="moves-list">
+          {% for m in s.moves %}
+          <li>⚡{{ m.energy_cost }} &nbsp;<strong>{{ m.name }}</strong> &nbsp;<span class="move-cost">({{ m.damage }} dmg)</span></li>
+          {% endfor %}
+        </ul>
+      </label>
+      {% endfor %}
+    </div>
+    <button class="btn" type="submit">Go to Battle</button>
+  </form>
 
-    <h3>Choose Your Defenders (pick up to {{ max_defenders }})</h3>
-    <form action="/resolve" method="post">
-        {% for native in natives %}
-        <label>
-            <input type="checkbox" name="natives" value="{{ native.name }}">
-            <strong>{{ native.name }}</strong> —
-            attack: {{ native.attack }},
-            hp: {{ native.health }},
-            resistances: {{ native.resistance }}
-        </label><br>
-        {% endfor %}
-        <br>
-        <button type="submit">Defend</button>
-    </form>
+  <script>
+    const MAX = {{ team_size }};
+    function enforceLimit(changed) {
+      const boxes = document.querySelectorAll('input[name="natives"]');
+      const checked = Array.from(boxes).filter(b => b.checked);
+      if (checked.length > MAX) {
+        changed.checked = false;
+      }
+    }
+  </script>
 </body>
 </html>

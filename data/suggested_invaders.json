@@ -5,6 +5,8 @@
     "attack": 27,
     "resistance": { "default": 1.0 },
     "is_invasive": true,
+    "weak_to": ["Placeholder weakness"],
+    "strong_against": ["Placeholder strength"],
     "facts": [
       "Coqui (Eleutherodactylus coqui) — https://dlnr.hawaii.gov/hisc/coqui-frog"
     ]
@@ -15,6 +17,8 @@
     "attack": 58,
     "resistance": { "default": 1.0 },
     "is_invasive": true,
+    "weak_to": ["Placeholder weakness"],
+    "strong_against": ["Placeholder strength"],
     "facts": [
       "Coconut Rhinoceros Beetle (Oryctes rhinoceros) — https://dlnr.hawaii.gov/hisc/info/invasive-species-profiles/coconut-rhinoceros-beetle"
     ]
@@ -25,6 +29,8 @@
     "attack": 29,
     "resistance": { "default": 1.0 },
     "is_invasive": true,
+    "weak_to": ["Placeholder weakness"],
+    "strong_against": ["Placeholder strength"],
     "facts": [
       "Miconia (Miconia calvescens) — https://dlnr.hawaii.gov/hisc/miconia-calvescens"
     ]
@@ -35,6 +41,8 @@
     "attack": 49,
     "resistance": { "default": 1.0 },
     "is_invasive": true,
+    "weak_to": ["Placeholder weakness"],
+    "strong_against": ["Placeholder strength"],
     "facts": [
       "Little Fire Ant (Wasmannia auropunctata) — https://dlnr.hawaii.gov/hisc/little-fire-ant-lfa"
     ]
@@ -45,6 +53,8 @@
     "attack": 24,
     "resistance": { "default": 1.0 },
     "is_invasive": true,
+    "weak_to": ["Placeholder weakness"],
+    "strong_against": ["Placeholder strength"],
     "facts": [
       "Naio Thrips (Klambothrips myopori) — https://dlnr.hawaii.gov/hisc/info/species/naio-thrips"
     ]
@@ -55,6 +65,8 @@
     "attack": 25,
     "resistance": { "default": 1.0 },
     "is_invasive": true,
+    "weak_to": ["Placeholder weakness"],
+    "strong_against": ["Placeholder strength"],
     "facts": [
       "Mongoose (Herpestes javanicus) — https://dlnr.hawaii.gov/hisc/mongoose-urva-auropunctata"
     ]

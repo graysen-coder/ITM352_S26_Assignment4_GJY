@@ -1,141 +1,165 @@
 import json
 import random
-from species import Species, Wave
-
-# Synergy bonuses: if all species in a combo are in the player's selection, apply the multiplier
-# Format: { frozenset of native names : multiplier }
-SYNERGY_TABLE = {
-    frozenset(["nene", "pueo"]): 1.3,
-    frozenset(["silversword", "ohia"]): 1.25,
-}
+from species import Species, Wave, Move
 
 
-def load_species(filepath="data/species.json"):
-    with open(filepath, "r") as f:
-        data = json.load(f)
+def _species_from_entry(entry):
+    raw_moves = entry.get("moves", [])
+    moves = [
+        Move(m["name"], m["damage"], m["energy_cost"], m.get("description", ""))
+        for m in raw_moves
+    ]
+    return Species(
+        name=entry["name"],
+        health=entry["health"],
+        attack=entry["attack"],
+        resistance=entry["resistance"],
+        is_invasive=entry["is_invasive"],
+        facts=entry.get("facts", []),
+        moves=moves,
+        weak_to=entry.get("weak_to", []),
+        strong_against=entry.get("strong_against", []),
+    )
 
+
+def load_species(natives_path="data/natives.json", invaders_path="data/suggested_invaders.json"):
+    """Load natives (with moves) from natives.json and invaders from suggested_invaders.json."""
     species_list = []
-    for entry in data:
-        s = Species(
-            name=entry["name"],
-            health=entry["health"],
-            attack=entry["attack"],
-            resistance=entry["resistance"],
-            is_invasive=entry["is_invasive"],
-            facts=entry.get("facts", [])
-        )
-        species_list.append(s)
+    for path in (natives_path, invaders_path):
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            for entry in data:
+                species_list.append(_species_from_entry(entry))
+        except FileNotFoundError:
+            pass
     return species_list
 
 
-def get_max_defenders(wave_num):
-    if wave_num <= 2:
-        return 1
-    elif wave_num <= 5:
-        return 2
-    else:
-        return 3
+def load_invaders(filepath="data/suggested_invaders.json"):
+    try:
+        with open(filepath, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return [_species_from_entry(e) for e in data]
+    except FileNotFoundError:
+        return []
 
 
 def generate_wave(wave_num, all_species):
-    invaders = [s for s in all_species if s.is_invasive]
-    difficulty = round(1.0 + (wave_num - 1) * 0.2, 2)  # wave 1 = 1.0, wave 2 = 1.2, etc.
+    invaders = load_invaders()
+    if not invaders:
+        invaders = [s for s in all_species if s.is_invasive]
 
-    # number of invaders increases every 3 waves
+    difficulty = round(1.0 + (wave_num - 1) * 0.2, 2)
     num_invaders = 1 + (wave_num - 1) // 3
     num_invaders = min(num_invaders, len(invaders))
-
-    selected_invaders = random.sample(invaders, num_invaders)
-    return Wave(wave_num=wave_num, invaders=selected_invaders, difficulty=difficulty)
-
-
-def calculate_battle(native, invader, difficulty):
-    native_power = native.attack * native.get_resistance_against(invader.name)
-    invader_power = invader.attack * difficulty
-
-    winner = "native" if native_power >= invader_power else "invader"
-
-    return {
-        "native": native.name,
-        "invader": invader.name,
-        "native_power": round(native_power, 2),
-        "invader_power": round(invader_power, 2),
-        "winner": winner
-    }
+    selected = random.sample(invaders, num_invaders)
+    return Wave(wave_num=wave_num, invaders=selected, difficulty=difficulty)
 
 
-def check_synergy(native_list):
-    names = set(s.name for s in native_list)
-    bonus = 1.0
-    triggered = []
+def init_battle(team_names, wave, all_species):
+    """
+    Build a plain-dict battle state (JSON-serializable for Flask session).
+    Energy starts at 5, gains 3 per turn, caps at 10.
+    """
+    species_map = {s.name: s for s in all_species}
 
-    for combo, multiplier in SYNERGY_TABLE.items():
-        if combo.issubset(names):
-            bonus *= multiplier
-            triggered.append((list(combo), multiplier))
+    team = [
+        {"name": n, "hp": species_map[n].health, "max_hp": species_map[n].health}
+        for n in team_names
+        if n in species_map
+    ]
 
-    return bonus, triggered
-
-
-def resolve_wave(native_list, wave):
-    synergy_bonus, triggered_synergies = check_synergy(native_list)
-    matchups = []
-    native_wins = 0
-    invader_wins = 0
-
-    for invader in wave.invaders:
-        best_result = None
-        for native in native_list:
-            result = calculate_battle(native, invader, wave.difficulty)
-            # apply synergy bonus to native power
-            result["native_power"] = round(result["native_power"] * synergy_bonus, 2)
-            result["winner"] = "native" if result["native_power"] >= result["invader_power"] else "invader"
-            # keep the best native matchup against this invader
-            if best_result is None or result["native_power"] > best_result["native_power"]:
-                best_result = result
-        matchups.append(best_result)
-        if best_result["winner"] == "native":
-            native_wins += 1
-        else:
-            invader_wins += 1
-
-    wave_won = native_wins >= invader_wins
+    invaders = [
+        {
+            "name": inv.name,
+            "hp": inv.health,
+            "max_hp": inv.health,
+            "weak_to": inv.weak_to,
+            "strong_against": inv.strong_against,
+        }
+        for inv in wave.invaders
+    ]
 
     return {
         "wave_num": wave.wave_num,
         "difficulty": wave.difficulty,
-        "matchups": matchups,
-        "native_wins": native_wins,
-        "invader_wins": invader_wins,
-        "wave_won": wave_won,
-        "synergy_bonus": round(synergy_bonus, 2),
-        "triggered_synergies": triggered_synergies
+        "team": team,
+        "active_idx": 0,
+        "invaders": invaders,
+        "invader_idx": 0,
+        "energy": 5,
+        "max_energy": 10,
+        "energy_regen": 3,
+        "turn": 1,
+        "log": [],
+        "battle_over": False,
+        "player_won": False,
     }
 
 
-def update_score(wave_result, current_score):
-    if wave_result["wave_won"]:
-        points = 100 * wave_result["wave_num"] + int((wave_result["synergy_bonus"] - 1.0) * 200)
-    else:
-        points = 0
-    return current_score + points
+def process_turn(battle_state, move_name, all_species):
+    """
+    Resolve one player turn: player uses move_name, invader auto-attacks.
+    Mutates battle_state in place. No-ops on invalid moves.
+    """
+    species_map = {s.name: s for s in all_species}
+
+    active = battle_state["team"][battle_state["active_idx"]]
+    active_species = species_map[active["name"]]
+
+    inv_state = battle_state["invaders"][battle_state["invader_idx"]]
+    inv_species = species_map.get(inv_state["name"])
+
+    # Find and validate the chosen move
+    move = next((m for m in active_species.moves if m.name == move_name), None)
+    if move is None or move.energy_cost > battle_state["energy"]:
+        return
+
+    log = []
+
+    # Player attacks
+    battle_state["energy"] -= move.energy_cost
+    inv_state["hp"] = max(0, inv_state["hp"] - move.damage)
+    log.append(f"{active['name']} used {move.name} — {move.damage} damage!")
+
+    # Invader counter-attacks if still alive
+    if inv_state["hp"] > 0 and inv_species:
+        inv_dmg = int(inv_species.attack * battle_state["difficulty"])
+        active["hp"] = max(0, active["hp"] - inv_dmg)
+        log.append(f"{inv_state['name']} struck back for {inv_dmg} damage!")
+
+    # Check: invader fainted
+    if inv_state["hp"] <= 0:
+        log.append(f"{inv_state['name']} was defeated!")
+        battle_state["invader_idx"] += 1
+        if battle_state["invader_idx"] >= len(battle_state["invaders"]):
+            battle_state["battle_over"] = True
+            battle_state["player_won"] = True
+
+    # Check: active defender fainted
+    if active["hp"] <= 0:
+        log.append(f"{active['name']} fainted!")
+        battle_state["active_idx"] += 1
+        if battle_state["active_idx"] >= len(battle_state["team"]):
+            battle_state["battle_over"] = True
+            battle_state["player_won"] = False
+
+    # Regen energy for next turn (only if battle continues)
+    if not battle_state["battle_over"]:
+        battle_state["energy"] = min(
+            battle_state["max_energy"],
+            battle_state["energy"] + battle_state["energy_regen"]
+        )
+        battle_state["turn"] += 1
+
+    # Keep log to last 8 entries
+    battle_state["log"] = (battle_state["log"] + log)[-8:]
 
 
-if __name__ == "__main__":
-    all_species = load_species()
-
-    natives = [s for s in all_species if not s.is_invasive]
-    player_selection = natives[:2]
-
-    score = 0
-    for wave_num in range(1, 4):
-        wave = generate_wave(wave_num, all_species)
-        result = resolve_wave(player_selection, wave)
-        score = update_score(result, score)
-
-        print(f"\n--- Wave {wave_num} (difficulty {wave.difficulty}) ---")
-        for m in result["matchups"]:
-            print(f"  {m['native']} (power {m['native_power']}) vs {m['invader']} (power {m['invader_power']}) -> {m['winner']} wins")
-        if result["triggered_synergies"]:
-            print(f"  Synergy bonus: x{result['synergy_bonus']} from {result['triggered_synergies']}")
-        print(f"  Wave result: {'WIN' if result['wave_won'] else 'LOSS'} | Score: {score}")
+def score_for_wave(battle_state):
+    """Points earned for winning a wave based on wave number and remaining HP."""
+    if not battle_state["player_won"]:
+        return 0
+    remaining_hp = sum(m["hp"] for m in battle_state["team"])
+    return 100 * battle_state["wave_num"] + remaining_hp
