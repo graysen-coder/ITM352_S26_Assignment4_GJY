@@ -36,6 +36,21 @@ def load_species(natives_path="data/natives.json", invaders_path="data/suggested
     return species_list
 
 
+def load_natives_for_home(home_habitats, natives_path="data/natives.json"):
+    """Return native Species whose habitats overlap with the given home's habitat set."""
+    try:
+        with open(natives_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        return []
+    home_set = set(home_habitats)
+    return [
+        _species_from_entry(e)
+        for e in data
+        if home_set & set(e.get("habitats", []))
+    ]
+
+
 def load_invaders(filepath="data/suggested_invaders.json"):
     try:
         with open(filepath, "r", encoding="utf-8") as f:

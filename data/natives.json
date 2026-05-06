@@ -5,6 +5,7 @@
     "attack": 30,
     "resistance": { "default": 1.0 },
     "is_invasive": false,
+    "habitats": ["grassland", "dry_lowland", "volcanic_shrubland"],
     "weak_to": ["Placeholder weakness"],
     "strong_against": ["Placeholder strength"],
     "facts": [
@@ -23,6 +24,7 @@
     "attack": 36,
     "resistance": { "default": 1.0 },
     "is_invasive": false,
+    "habitats": ["grassland", "shrubland", "open_forest"],
     "weak_to": ["Placeholder weakness"],
     "strong_against": ["Placeholder strength"],
     "facts": [
@@ -40,6 +42,7 @@
     "attack": 22,
     "resistance": { "default": 1.0 },
     "is_invasive": false,
+    "habitats": ["volcanic_shrubland", "alpine", "subalpine"],
     "weak_to": ["Placeholder weakness"],
     "strong_against": ["Placeholder strength"],
     "facts": [
@@ -57,6 +60,7 @@
     "attack": 26,
     "resistance": { "default": 1.0 },
     "is_invasive": false,
+    "habitats": ["wet_forest", "dry_forest", "dry_lowland"],
     "weak_to": ["Placeholder weakness"],
     "strong_against": ["Placeholder strength"],
     "facts": [
@@ -74,6 +78,7 @@
     "attack": 24,
     "resistance": { "default": 1.0 },
     "is_invasive": false,
+    "habitats": ["wet_forest", "montane_forest"],
     "weak_to": ["Placeholder weakness"],
     "strong_against": ["Placeholder strength"],
     "facts": [
@@ -91,6 +96,7 @@
     "attack": 20,
     "resistance": { "default": 1.0 },
     "is_invasive": false,
+    "habitats": ["coastal", "marine"],
     "weak_to": ["Placeholder weakness"],
     "strong_against": ["Placeholder strength"],
     "facts": [

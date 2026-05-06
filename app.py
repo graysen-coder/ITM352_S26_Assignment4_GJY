@@ -1,11 +1,22 @@
 from flask import Flask, render_template, request, redirect, url_for, session
-from game_logic import load_species, load_invaders, generate_wave, init_battle, process_turn, score_for_wave
+from game_logic import load_species, load_invaders, load_natives_for_home, generate_wave, init_battle, process_turn, score_for_wave
 
 app = Flask(__name__)
 app.secret_key = "kiai-aina-dev-key"
 
-MAX_WAVES = 10
 TEAM_SIZE = 3
+
+HOME_HABITATS = {
+    "nene":    ["grassland", "dry_lowland", "volcanic_shrubland"],
+    "alala":   ["wet_forest", "dry_forest", "montane_forest", "open_forest"],
+    "opeapea": ["coastal", "marine", "wet_forest", "shrubland"],
+}
+
+HOME_LABELS = {
+    "nene":    "Grassland & Volcanic Shrubland",
+    "alala":   "Wet & Dry Forest",
+    "opeapea": "Coastal & Mixed Habitat",
+}
 
 
 def get_all_species():
@@ -23,6 +34,7 @@ def start():
     session.clear()
     session["wave_num"] = 1
     session["score"] = 0
+    session["waves_completed"] = 0
     session["run_history"] = []
     return redirect(url_for("choose_home"))
 
@@ -75,10 +87,10 @@ def game():
     if "wave_num" not in session:
         return redirect(url_for("home"))
 
-    all_species = get_all_species()
-    natives = [s for s in all_species if not s.is_invasive]
+    home_key = session.get("home_species", "nene")
+    habitats = HOME_HABITATS.get(home_key, [])
+    natives = load_natives_for_home(habitats)
 
-    # Pass moves as plain dicts so Jinja can iterate them
     natives_data = [
         {
             "name": s.name,
@@ -98,6 +110,7 @@ def game():
         score=session["score"],
         natives=natives_data,
         team_size=TEAM_SIZE,
+        habitat_label=HOME_LABELS.get(home_key, ""),
     )
 
 
@@ -175,7 +188,10 @@ def battle_action():
         })
         session["run_history"] = history
 
-        game_over = not state["player_won"] or session["wave_num"] >= MAX_WAVES
+        if state["player_won"]:
+            session["waves_completed"] = session.get("waves_completed", 0) + 1
+
+        game_over = not state["player_won"]
         session["game_over"] = game_over
 
         # Collect invader facts for result screen
@@ -226,6 +242,7 @@ def end():
         score=session.get("score", 0),
         run_history=session.get("run_history", []),
         wave_num=session.get("wave_num", 1),
+        waves_completed=session.get("waves_completed", 0),
     )
 
 
