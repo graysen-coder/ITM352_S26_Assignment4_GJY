@@ -15,7 +15,12 @@
     ],
     "facts": [
       "Coqui (Eleutherodactylus coqui) — https://dlnr.hawaii.gov/hisc/coqui-frog/"
-    ]
+    ],
+    "display_name": "Coqui",
+    "common_line": "Common: Coqui",
+    "scientific": "Scientific: Eleutherodactylus coqui",
+    "profile_url": "https://dlnr.hawaii.gov/hisc/coqui-frog/",
+    "image_url": null
   },
   {
     "name": "coconut-rhinoceros-beetle",
@@ -33,7 +38,12 @@
     ],
     "facts": [
       "Coconut Rhinoceros Beetle (Oryctes rhinoceros) — https://dlnr.hawaii.gov/hisc/info/invasive-species-profiles/coconut-rhinoceros-beetle/"
-    ]
+    ],
+    "display_name": "Coconut Rhinoceros Beetle",
+    "common_line": "Common: Coconut Rhinoceros Beetle",
+    "scientific": "Scientific: Oryctes rhinoceros",
+    "profile_url": "https://dlnr.hawaii.gov/hisc/info/invasive-species-profiles/coconut-rhinoceros-beetle/",
+    "image_url": null
   },
   {
     "name": "brown-tree-snake",
@@ -51,7 +61,12 @@
     ],
     "facts": [
       "Brown Tree Snake (Boiga irregularis) — https://dlnr.hawaii.gov/hisc/info/species/brown-tree-snake/"
-    ]
+    ],
+    "display_name": "Brown Tree Snake",
+    "common_line": "Common: Brown Tree Snake",
+    "scientific": "Scientific: Boiga irregularis",
+    "profile_url": "https://dlnr.hawaii.gov/hisc/info/species/brown-tree-snake/",
+    "image_url": null
   },
   {
     "name": "little-fire-ant-lfa",
@@ -69,7 +84,12 @@
     ],
     "facts": [
       "Little Fire Ant (Wasmannia auropunctata) — https://dlnr.hawaii.gov/hisc/little-fire-ant-lfa/"
-    ]
+    ],
+    "display_name": "Little Fire Ant",
+    "common_line": "Common: Little Fire Ant",
+    "scientific": "Scientific: Wasmannia auropunctata",
+    "profile_url": "https://dlnr.hawaii.gov/hisc/little-fire-ant-lfa/",
+    "image_url": null
   },
   {
     "name": "naio-thrips",
@@ -87,7 +107,12 @@
     ],
     "facts": [
       "Naio Thrips (Klambothrips myopori) — https://dlnr.hawaii.gov/hisc/info/species/naio-thrips/"
-    ]
+    ],
+    "display_name": "Naio Thrips",
+    "common_line": "Common: Naio Thrips",
+    "scientific": "Scientific: Klambothrips myopori",
+    "profile_url": "https://dlnr.hawaii.gov/hisc/info/species/naio-thrips/",
+    "image_url": null
   },
   {
     "name": "mongoose-urva-auropunctata",
@@ -105,6 +130,11 @@
     ],
     "facts": [
       "Mongoose (Herpestes javanicus) — https://dlnr.hawaii.gov/hisc/mongoose-urva-auropunctata/"
-    ]
+    ],
+    "display_name": "Mongoose",
+    "common_line": "Common: Mongoose",
+    "scientific": "Scientific: Herpestes javanicus",
+    "profile_url": "https://dlnr.hawaii.gov/hisc/mongoose-urva-auropunctata/",
+    "image_url": null
   }
 ]

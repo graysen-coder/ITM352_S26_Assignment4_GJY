@@ -3,7 +3,7 @@
 <head>
   <title>Wave {{ state.wave_num }} — Battle</title>
   <style>
-    body { font-family: sans-serif; max-width: 700px; margin: 40px auto; padding: 0 20px; }
+    body { font-family: sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; }
     h1, h2 { color: #2d6a4f; }
     .top-bar { display: flex; justify-content: space-between; color: #555; margin-bottom: 20px; }
 
@@ -13,6 +13,21 @@
     .combatant.invader { border-color: #c0392b; background: #fdf0f0; }
     .combatant.defender { border-color: #2d6a4f; background: #f0faf4; }
     .combatant-name { font-size: 1.1em; font-weight: bold; text-transform: capitalize; margin-bottom: 8px; }
+    .combatant-name.proper { text-transform: none; }
+    .combatant-name a { color: #1b4332; }
+    .combatant-name a:hover { color: #2d6a4f; }
+    .combatant.invader .combatant-name a { color: #922b21; }
+    .combatant.invader .combatant-name a:hover { color: #c0392b; }
+    .defender-card-common { font-size: 0.78em; color: #444; margin-top: 4px; line-height: 1.35; }
+    .defender-card-sci { font-size: 0.78em; font-style: italic; color: #666; margin-top: 4px; }
+    .defender-card-thumb {
+      width: 100%;
+      height: auto;
+      border-radius: 6px;
+      margin: 10px 0;
+      display: block;
+      background: #eee;
+    }
     .combatant-traits { font-size: 0.78em; margin-top: 8px; line-height: 1.7; }
     .combatant-traits .strong { color: #1b7c3e; }
     .combatant-traits .weak { color: #b03a2e; }
@@ -70,13 +85,13 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.65em;
+      font-size: 0.6em;
       font-weight: bold;
       text-align: center;
-      text-transform: capitalize;
+      text-transform: none;
       line-height: 1.2;
       background: #fff;
-      word-break: break-all;
+      word-break: break-word;
       padding: 2px;
     }
     .defender-circle.fainted {
@@ -97,9 +112,9 @@
     }
     .defender-label {
       font-size: 0.7em;
-      text-transform: capitalize;
+      text-transform: none;
       color: #555;
-      max-width: 58px;
+      max-width: 72px;
       text-align: center;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -153,7 +168,19 @@
   <!-- Battle field -->
   <div class="field">
     <div class="combatant invader">
-      <div class="combatant-name">{{ inv.name }}</div>
+      <div class="combatant-name proper">
+        {% if inv_card.get('profile_url') %}
+        <a href="{{ inv_card.profile_url }}" target="_blank" rel="noopener noreferrer">{{ inv_card.get('display_name') or inv.name }}</a>
+        {% else %}
+        {{ inv_card.get('display_name') or inv.name }}
+        {% endif %}
+      </div>
+      {% if inv_card.get('common_line') %}
+      <div class="defender-card-common">{{ inv_card.common_line }}</div>
+      {% endif %}
+      {% if inv_card.get('scientific') %}
+      <div class="defender-card-sci">{{ inv_card.scientific }}</div>
+      {% endif %}
       <div class="hp-label">HP: {{ inv.hp }} / {{ inv.max_hp }}</div>
       <div class="hp-bar-bg">
         {% set inv_pct = (inv.hp / inv.max_hp * 100) | int %}
@@ -172,7 +199,22 @@
     <div class="vs">VS</div>
 
     <div class="combatant defender">
-      <div class="combatant-name">{{ active.name }}</div>
+      <div class="combatant-name proper">
+        {% if active_dlnr.get('profile_url') %}
+        <a href="{{ active_dlnr.profile_url }}" target="_blank" rel="noopener noreferrer">{{ active_dlnr.get('display_name') or active.name }}</a>
+        {% else %}
+        {{ active_dlnr.get('display_name') or active.name }}
+        {% endif %}
+      </div>
+      {% if active_dlnr.get('common_line') %}
+      <div class="defender-card-common">{{ active_dlnr.common_line }}</div>
+      {% endif %}
+      {% if active_dlnr.get('scientific') %}
+      <div class="defender-card-sci">{{ active_dlnr.scientific }}</div>
+      {% endif %}
+      {% if active_dlnr.get('image_url') %}
+      <img class="defender-card-thumb" src="{{ active_dlnr.image_url }}" alt="">
+      {% endif %}
       <div class="hp-label">HP: {{ active.hp }} / {{ active.max_hp }}</div>
       <div class="hp-bar-bg">
         {% set def_pct = (active.hp / active.max_hp * 100) | int %}
@@ -198,6 +240,8 @@
 
       {% for member in state.team %}
       {% set i = loop.index0 %}
+      {% set node_dlnr = dlnr_meta.get(member.name, {}) %}
+      {% set node_label = node_dlnr.get('display_name') or member.name %}
 
       <!-- Connector leading into this node -->
       {% if i < state.active_idx %}
@@ -214,9 +258,9 @@
           {% if i < state.active_idx %}fainted
           {% elif i == state.active_idx %}active
           {% else %}waiting{% endif %}">
-          {% if i < state.active_idx %}✗{% else %}{{ member.name[:5] }}{% endif %}
+          {% if i < state.active_idx %}✗{% else %}{{ (node_label | string)[:4] }}{% endif %}
         </div>
-        <div class="defender-label">{{ member.name }}</div>
+        <div class="defender-label">{{ node_label }}</div>
         {% if i == state.active_idx %}<div class="front-tag">FRONT</div>{% endif %}
       </div>
       {% endfor %}
@@ -249,7 +293,8 @@
 
   <!-- Moves -->
   <div class="moves-section">
-    <h3>{{ active.name }}'s Moves</h3>
+    {% set move_owner = active_dlnr.get('display_name') or active.name %}
+    <h3>{{ move_owner }}'s Moves</h3>
     <form action="/battle/action" method="post">
       <div class="moves-grid">
         {% for m in active_moves %}

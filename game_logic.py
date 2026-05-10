@@ -22,8 +22,8 @@ def _species_from_entry(entry):
     )
 
 
-def load_species(natives_path="data/natives.json", invaders_path="data/suggested_invaders.json"):
-    """Load natives (with moves) from natives.json and invaders from suggested_invaders.json."""
+def load_species(natives_path="data/defenders.json", invaders_path="data/invaders_set_alpha.json"):
+    """Load natives (with moves) from defenders.json and invaders from invaders_set_alpha.json."""
     species_list = []
     for path in (natives_path, invaders_path):
         try:
@@ -36,7 +36,7 @@ def load_species(natives_path="data/natives.json", invaders_path="data/suggested
     return species_list
 
 
-def load_natives_for_home(home_habitats, natives_path="data/natives.json"):
+def load_natives_for_home(home_habitats, natives_path="data/defenders.json"):
     """Return native Species whose habitats overlap with the given home's habitat set."""
     try:
         with open(natives_path, "r", encoding="utf-8") as f:
@@ -51,7 +51,23 @@ def load_natives_for_home(home_habitats, natives_path="data/natives.json"):
     ]
 
 
-def load_invaders(filepath="data/suggested_invaders.json"):
+def load_defender_natives_ordered(names: list[str], natives_path="data/defenders.json"):
+    """Return native Species in the same order as ``names`` (for roster screens)."""
+    try:
+        with open(natives_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        return []
+    by_name = {e["name"]: e for e in data if not e.get("is_invasive", False)}
+    out = []
+    for n in names:
+        e = by_name.get(n)
+        if e:
+            out.append(_species_from_entry(e))
+    return out
+
+
+def load_invaders(filepath="data/invaders_set_alpha.json"):
     try:
         with open(filepath, "r", encoding="utf-8") as f:
             data = json.load(f)

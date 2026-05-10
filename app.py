@@ -1,22 +1,20 @@
 from flask import Flask, render_template, request, redirect, url_for, session
-from game_logic import load_species, load_invaders, load_natives_for_home, generate_wave, init_battle, process_turn, score_for_wave
+from defender_cards import DEFENDER_NATIVE_NAMES_ORDERED, get_dlnr_meta_by_native_name
+from invader_cards import get_invader_cards_by_name
+from game_logic import (
+    load_species,
+    load_invaders,
+    load_defender_natives_ordered,
+    generate_wave,
+    init_battle,
+    process_turn,
+    score_for_wave,
+)
 
 app = Flask(__name__)
 app.secret_key = "kiai-aina-dev-key"
 
 TEAM_SIZE = 3
-
-HOME_HABITATS = {
-    "nene":    ["grassland", "dry_lowland", "volcanic_shrubland"],
-    "alala":   ["wet_forest", "dry_forest", "montane_forest", "open_forest"],
-    "opeapea": ["coastal", "marine", "wet_forest", "shrubland"],
-}
-
-HOME_LABELS = {
-    "nene":    "Grassland & Volcanic Shrubland",
-    "alala":   "Wet & Dry Forest",
-    "opeapea": "Coastal & Mixed Habitat",
-}
 
 
 def get_all_species():
@@ -29,6 +27,7 @@ def home():
     title_image = url_for("static", filename="title.png")
     return render_template("home.html", bg_pic=background_image, title_pic=title_image)
 
+
 @app.route("/start", methods=["POST"])
 def start():
     session.clear()
@@ -36,49 +35,14 @@ def start():
     session["score"] = 0
     session["waves_completed"] = 0
     session["run_history"] = []
-    return redirect(url_for("choose_home"))
+    return redirect(url_for("game"))
 
 
-HOME_SPECIES = [
-    {
-        "name": "Nēnē",
-        "scientific": "Branta sandvicensis",
-        "key": "nene",
-        "image": "nene_bird_pic.jpg",
-        "placeholder": "information placeholder",
-    },
-    {
-        "name": "ʻAlalā",
-        "scientific": "Corvus hawaiiensis",
-        "key": "alala",
-        "image": "alala_bird_pic.jpg",
-        "placeholder": "information placeholder",
-    },
-    {
-        "name": "ʻŌpeʻapeʻa",
-        "scientific": "Lasiurus semotus",
-        "key": "opeapea",
-        "image": "opeapea_bat_pic.jpg",
-        "placeholder": "information placeholder",
-    },
-]
-
-
-@app.route("/choose-home", methods=["GET"])
+@app.route("/choose-home", methods=["GET", "POST"])
 def choose_home():
+    """Legacy route: home selection was merged into the defender pick screen."""
     if "wave_num" not in session:
         return redirect(url_for("home"))
-    return render_template("choose_home.html", species=HOME_SPECIES)
-
-
-@app.route("/choose-home", methods=["POST"])
-def choose_home_post():
-    if "wave_num" not in session:
-        return redirect(url_for("home"))
-    chosen = request.form.get("home_species")
-    if not chosen:
-        return redirect(url_for("choose_home"))
-    session["home_species"] = chosen
     return redirect(url_for("game"))
 
 
@@ -87,22 +51,28 @@ def game():
     if "wave_num" not in session:
         return redirect(url_for("home"))
 
-    home_key = session.get("home_species", "nene")
-    habitats = HOME_HABITATS.get(home_key, [])
-    natives = load_natives_for_home(habitats)
+    natives = load_defender_natives_ordered(DEFENDER_NATIVE_NAMES_ORDERED)
+    dlnr_meta = get_dlnr_meta_by_native_name()
 
-    natives_data = [
-        {
-            "name": s.name,
-            "health": s.health,
-            "attack": s.attack,
-            "facts": s.facts,
-            "moves": [m.to_dict() for m in s.moves],
-            "weak_to": s.weak_to,
-            "strong_against": s.strong_against,
-        }
-        for s in natives
-    ]
+    natives_data = []
+    for s in natives:
+        m = dlnr_meta.get(s.name, {})
+        natives_data.append(
+            {
+                "name": s.name,
+                "display_name": m.get("display_name") or s.name.replace("_", " "),
+                "common_line": m.get("common_line", ""),
+                "image_url": m.get("image_url", ""),
+                "profile_url": m.get("profile_url", ""),
+                "scientific": m.get("scientific", ""),
+                "health": s.health,
+                "attack": s.attack,
+                "facts": s.facts,
+                "moves": [mv.to_dict() for mv in s.moves],
+                "weak_to": s.weak_to,
+                "strong_against": s.strong_against,
+            }
+        )
 
     return render_template(
         "game.html",
@@ -110,7 +80,6 @@ def game():
         score=session["score"],
         natives=natives_data,
         team_size=TEAM_SIZE,
-        habitat_label=HOME_LABELS.get(home_key, ""),
     )
 
 
@@ -152,13 +121,21 @@ def battle():
     # Current invader
     inv = state["invaders"][state["invader_idx"]]
 
+    dlnr_meta = get_dlnr_meta_by_native_name()
+    active_dlnr = dlnr_meta.get(active["name"], {})
+    invader_cards = get_invader_cards_by_name()
+    inv_card = invader_cards.get(inv["name"], {})
+
     return render_template(
         "battle.html",
         state=state,
         active=active,
         active_moves=active_moves,
         active_traits=active_traits,
+        active_dlnr=active_dlnr,
+        dlnr_meta=dlnr_meta,
         inv=inv,
+        inv_card=inv_card,
         score=session["score"],
     )
 
@@ -199,11 +176,14 @@ def battle_action():
         species_map = {s.name: s for s in all_species}
         invaders = load_invaders()
         inv_map = {s.name: s for s in invaders}
+        invader_cards = get_invader_cards_by_name()
         facts = []
         for inv in state["invaders"]:
             s = inv_map.get(inv["name"]) or species_map.get(inv["name"])
             if s and s.facts:
-                facts.append({"species": inv["name"], "fact": s.facts[0]})
+                inv_card = invader_cards.get(inv["name"], {})
+                label = inv_card.get("display_name") or inv["name"]
+                facts.append({"species": label, "fact": s.facts[0]})
         session["last_facts"] = facts
 
         return redirect(url_for("result"))

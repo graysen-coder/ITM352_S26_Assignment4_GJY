@@ -3,16 +3,35 @@
 <head>
   <title>Wave {{ wave_num }} — Choose Your Team</title>
   <style>
-    body { font-family: sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; }
+    body { font-family: sans-serif; max-width: 1200px; margin: 40px auto; padding: 0 20px; }
     h1, h2 { color: #2d6a4f; }
     .species-grid { display: flex; flex-wrap: wrap; gap: 16px; margin: 20px 0; }
     .species-card {
-      border: 2px solid #ccc; border-radius: 8px; padding: 16px; width: 220px;
+      border: 2px solid #ccc; border-radius: 8px; padding: 16px; width: 275px;
       cursor: pointer; transition: border-color 0.2s;
     }
     .species-card:has(input:checked) { border-color: #2d6a4f; background: #f0faf4; }
     .species-card input { margin-right: 8px; }
-    .species-name { font-size: 1.1em; font-weight: bold; text-transform: capitalize; }
+    .species-name {
+      font-size: 1.1em; font-weight: bold;
+    }
+    .species-name a { color: #1b4332; }
+    .species-name a:hover { color: #2d6a4f; }
+    .species-common {
+      font-size: 0.78em; color: #444; margin-top: 4px; line-height: 1.35;
+    }
+    .species-scientific {
+      font-size: 0.78em; font-style: italic; color: #666; margin-top: 4px;
+    }
+    .species-thumb {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 6px;
+      margin: 8px 0;
+      display: block;
+      background: #eee;
+    }
     .species-stats { font-size: 0.85em; color: #555; margin: 6px 0; }
     .traits { font-size: 0.78em; margin: 6px 0 4px; line-height: 1.6; }
     .traits .strong { color: #1b7c3e; }
@@ -32,8 +51,7 @@
   <h1>Kia'i 'Aina</h1>
   <div class="score-bar">Wave {{ wave_num }} &nbsp;|&nbsp; Score: {{ score }}</div>
   <h2>Choose {{ team_size }} Defenders</h2>
-  <p>Habitat: <strong>{{ habitat_label }}</strong></p>
-  <p>Pick up to {{ team_size }} native species to fight for this wave. Consider their HP, and which moves fit your strategy.</p>
+  <p>Pick up to {{ team_size }} native species for this wave. Names and photos come from the DLNR Native Birds profiles. Consider HP, moves, and typings.</p>
 
   <form action="/battle/start" method="post">
     <div class="species-grid">
@@ -41,8 +59,23 @@
       <label class="species-card">
         <div>
           <input type="checkbox" name="natives" value="{{ s.name }}" onclick="enforceLimit(this)">
-          <span class="species-name">{{ s.name }}</span>
+          <span class="species-name">
+            {% if s.profile_url %}
+            <a href="{{ s.profile_url }}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">{{ s.display_name }}</a>
+            {% else %}
+            {{ s.display_name }}
+            {% endif %}
+          </span>
         </div>
+        {% if s.common_line %}
+        <div class="species-common">{{ s.common_line }}</div>
+        {% endif %}
+        {% if s.scientific %}
+        <div class="species-scientific">{{ s.scientific }}</div>
+        {% endif %}
+        {% if s.image_url %}
+        <img class="species-thumb" src="{{ s.image_url }}" alt="">
+        {% endif %}
         <div class="species-stats">
           HP: {{ s.health }} &nbsp;|&nbsp; ATK: {{ s.attack }}
         </div>
