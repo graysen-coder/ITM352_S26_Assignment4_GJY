@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Leaderboard - Kiai Aina</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background-image: url('{{ bg_pic }}');
+            background-size: cover;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .back-button {
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 12px 24px;
+            background: linear-gradient(180deg, #4a9c3e, #2d5016);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 2.8em;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .header-subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .leaderboard-table {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.97);
+            border-collapse: collapse;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        }
+        
+        .leaderboard-table thead {
+            background: linear-gradient(180deg, #a855f7, #7e22ce);
+            color: white;
+        }
+        
+        .leaderboard-table th {
+            padding: 18px 15px;
+            text-align: left;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.95em;
+        }
+        
+        .leaderboard-table tbody tr {
+            border-bottom: 1px solid #eee;
+            transition: all 0.2s ease;
+        }
+        
+        .leaderboard-table tbody tr:hover {
+            background: rgba(168, 85, 247, 0.1);
+        }
+        
+        .leaderboard-table tbody tr.top-3 {
+            background: rgba(255, 215, 0, 0.1);
+            font-weight: bold;
+        }
+        
+        .leaderboard-table td {
+            padding: 16px 15px;
+            color: #333;
+        }
+        
+        .rank {
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1em;
+            width: 60px;
+        }
+        
+        .rank-1 {
+            color: #FFD700;
+        }
+        
+        .rank-2 {
+            color: #C0C0C0;
+        }
+        
+        .rank-3 {
+            color: #CD7F32;
+        }
+        
+        .rank-icon {
+            font-size: 1.3em;
+            margin-right: 5px;
+        }
+        
+        .player-name {
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .score {
+            text-align: right;
+            font-weight: bold;
+            color: #7e22ce;
+            font-size: 1.1em;
+        }
+        
+        .waves {
+            text-align: center;
+            color: #666;
+        }
+        
+        .empty-message {
+            text-align: center;
+            padding: 60px 20px;
+            color: white;
+            font-size: 1.3em;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: white;
+            font-size: 0.95em;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .leaderboard-table {
+                font-size: 0.9em;
+            }
+            
+            .leaderboard-table th,
+            .leaderboard-table td {
+                padding: 12px 10px;
+            }
+            
+            .player-name {
+                max-width: 120px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-button">← Back to Home</a>
+        
+        <div class="header">
+            <h1>🏆 Infinite Mode Leaderboard 🏆</h1>
+            <p class="header-subtitle">Top 10 Players</p>
+        </div>
+        
+        {% if leaderboard %}
+            <table class="leaderboard-table">
+                <thead>
+                    <tr>
+                        <th style="width: 80px;">Rank</th>
+                        <th>Player</th>
+                        <th style="width: 120px; text-align: right;">Score</th>
+                        <th style="width: 100px; text-align: center;">Waves</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for idx, entry in leaderboard %}
+                        <tr {% if idx <= 2 %}class="top-3"{% endif %}>
+                            <td class="rank">
+                                <span class="rank-icon">
+                                    {% if idx == 0 %}🥇{% elif idx == 1 %}🥈{% elif idx == 2 %}🥉{% else %}#{% endif %}
+                                </span>
+                                <span class="rank rank-{{ idx + 1 if idx < 3 else '' }}">{{ idx + 1 }}</span>
+                            </td>
+                            <td class="player-name">{{ entry.player_name }}</td>
+                            <td class="score">{{ entry.score }}</td>
+                            <td class="waves">{{ entry.waves_survived }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="empty-message">
+                <p>No scores yet! Be the first to play Infinite mode!</p>
+            </div>
+        {% endif %}
+        
+        <div class="footer">
+            <p>💜 Play Infinite Mode to get your name on the leaderboard! 💜</p>
+        </div>
+    </div>
+</body>
+</html>

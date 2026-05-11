@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Difficulty Select - Kiai Aina</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background-image: url('{{ bg_pic }}');
+            background-size: cover;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        
+        .wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+            min-height: 100vh;
+            justify-content: center;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+            margin-bottom: 50px;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .difficulty-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 25px;
+            max-width: 1000px;
+            width: 100%;
+            margin-bottom: 40px;
+        }
+        
+        .difficulty-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        .difficulty-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
+        }
+        
+        .difficulty-card:active {
+            transform: translateY(-2px);
+        }
+        
+        .difficulty-icon {
+            font-size: 3.5em;
+            margin-bottom: 15px;
+        }
+        
+        .difficulty-name {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .difficulty-description {
+            font-size: 0.95em;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .difficulty-stats {
+            font-size: 0.85em;
+            color: #888;
+            margin-top: auto;
+            padding-top: 15px;
+            border-top: 2px solid #eee;
+            width: 100%;
+        }
+        
+        .stat-item {
+            margin: 8px 0;
+        }
+        
+        .stat-label {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        /* Easy - Green */
+        .difficulty-card.easy {
+            border: 3px solid #4a9c3e;
+        }
+        
+        .difficulty-card.easy .difficulty-name {
+            color: #2d5016;
+        }
+        
+        .difficulty-card.easy .stat-label {
+            color: #2d5016;
+        }
+        
+        /* Normal - Blue */
+        .difficulty-card.normal {
+            border: 3px solid #3b82f6;
+        }
+        
+        .difficulty-card.normal .difficulty-name {
+            color: #1e40af;
+        }
+        
+        .difficulty-card.normal .stat-label {
+            color: #1e40af;
+        }
+        
+        /* Hard - Orange */
+        .difficulty-card.hard {
+            border: 3px solid #f59e0b;
+        }
+        
+        .difficulty-card.hard .difficulty-name {
+            color: #d97706;
+        }
+        
+        .difficulty-card.hard .stat-label {
+            color: #d97706;
+        }
+        
+        /* Infinite - Purple */
+        .difficulty-card.infinite {
+            border: 3px solid #a855f7;
+        }
+        
+        .difficulty-card.infinite .difficulty-name {
+            color: #7e22ce;
+        }
+        
+        .difficulty-card.infinite .stat-label {
+            color: #7e22ce;
+        }
+        
+        .back-button {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(180deg, #4a9c3e, #2d5016);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+        }
+        
+        .back-button:active {
+            transform: translateY(0);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .difficulty-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .difficulty-icon {
+                font-size: 2.5em;
+            }
+            
+            .difficulty-name {
+                font-size: 1.4em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="header">
+            <h1>⚙️ Select Difficulty</h1>
+            <p>Choose your challenge level</p>
+        </div>
+        
+        <div class="difficulty-grid">
+            <form action="/start" method="post" style="width: 100%;">
+                <input type="hidden" name="difficulty" value="easy">
+                <button type="submit" class="difficulty-card easy" style="border: none; background: none; padding: 30px; cursor: pointer;">
+                    <div class="difficulty-icon">🌱</div>
+                    <div class="difficulty-name">Easy</div>
+                    <div class="difficulty-description">Perfect for beginners</div>
+                    <div class="difficulty-stats">
+                        <div class="stat-item"><span class="stat-label">Enemy Health:</span> -30%</div>
+                        <div class="stat-item"><span class="stat-label">Attack:</span> -20%</div>
+                        <div class="stat-item"><span class="stat-label">Waves:</span> 3</div>
+                    </div>
+                </button>
+            </form>
+            
+            <form action="/start" method="post" style="width: 100%;">
+                <input type="hidden" name="difficulty" value="normal">
+                <button type="submit" class="difficulty-card normal" style="border: none; background: none; padding: 30px; cursor: pointer;">
+                    <div class="difficulty-icon">🌿</div>
+                    <div class="difficulty-name">Normal</div>
+                    <div class="difficulty-description">Standard gameplay</div>
+                    <div class="difficulty-stats">
+                        <div class="stat-item"><span class="stat-label">Enemy Health:</span> 100%</div>
+                        <div class="stat-item"><span class="stat-label">Attack:</span> 100%</div>
+                        <div class="stat-item"><span class="stat-label">Waves:</span> 5</div>
+                    </div>
+                </button>
+            </form>
+            
+            <form action="/start" method="post" style="width: 100%;">
+                <input type="hidden" name="difficulty" value="hard">
+                <button type="submit" class="difficulty-card hard" style="border: none; background: none; padding: 30px; cursor: pointer;">
+                    <div class="difficulty-icon">🔥</div>
+                    <div class="difficulty-name">Hard</div>
+                    <div class="difficulty-description">For experienced players</div>
+                    <div class="difficulty-stats">
+                        <div class="stat-item"><span class="stat-label">Enemy Health:</span> +30%</div>
+                        <div class="stat-item"><span class="stat-label">Attack:</span> +25%</div>
+                        <div class="stat-item"><span class="stat-label">Waves:</span> 8</div>
+                    </div>
+                </button>
+            </form>
+            
+            <form action="/start" method="post" style="width: 100%;">
+                <input type="hidden" name="difficulty" value="infinite">
+                <button type="submit" class="difficulty-card infinite" style="border: none; background: none; padding: 30px; cursor: pointer;">
+                    <div class="difficulty-icon">♾️</div>
+                    <div class="difficulty-name">Infinite</div>
+                    <div class="difficulty-description">Endless waves!</div>
+                    <div class="difficulty-stats">
+                        <div class="stat-item"><span class="stat-label">Enemy Health:</span> +50%</div>
+                        <div class="stat-item"><span class="stat-label">Attack:</span> +40%</div>
+                        <div class="stat-item"><span class="stat-label">Waves:</span> ∞</div>
+                        <div class="stat-item"><span class="stat-label">Leaderboard:</span> Yes</div>
+                    </div>
+                </button>
+            </form>
+        </div>
+        
+        <a href="/" class="back-button">← Back to Home</a>
+    </div>
+</body>
+</html>

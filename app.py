@@ -1,7 +1,13 @@
 from pathlib import Path
 import random
+import json
+import os
+from datetime import datetime
 
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail, Email, To, Content
+from dotenv import load_dotenv
 from defender_cards import DEFENDER_NATIVE_NAMES_ORDERED, get_dlnr_meta_by_native_name
 from invader_cards import get_invader_cards_by_name
 from game_logic import (
@@ -18,10 +24,182 @@ app = Flask(__name__)
 app.secret_key = "kiai-aina-dev-key"
 
 TEAM_SIZE = 3
+LEADERBOARD_FILE = Path(__file__).resolve().parent / "data" / "leaderboard.json"
+
+# Load environment variables
+load_dotenv()
+SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
+SENDGRID_FROM_EMAIL = os.getenv("SENDGRID_FROM_EMAIL", "noreply@kiaiaina.com")
 
 
 def get_all_species():
     return load_species()
+
+
+def load_leaderboard():
+    """Load leaderboard from JSON file."""
+    if not LEADERBOARD_FILE.exists():
+        return []
+    try:
+        with open(LEADERBOARD_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return []
+
+
+def save_leaderboard(leaderboard):
+    """Save leaderboard to JSON file."""
+    LEADERBOARD_FILE.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        with open(LEADERBOARD_FILE, "w", encoding="utf-8") as f:
+            json.dump(leaderboard, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        print(f"Error saving leaderboard: {e}")
+
+
+def add_to_leaderboard(player_name, email, score, waves_survived, difficulty):
+    """Add a score to the leaderboard."""
+    leaderboard = load_leaderboard()
+    
+    # Only add infinite mode scores to leaderboard
+    if difficulty != "infinite":
+        return False
+    
+    new_entry = {
+        "player_name": player_name,
+        "email": email,
+        "score": score,
+        "waves_survived": waves_survived,
+        "difficulty": difficulty,
+        "date": datetime.now().isoformat(),
+    }
+    
+    leaderboard.append(new_entry)
+    leaderboard.sort(key=lambda x: x["score"], reverse=True)
+    
+    # Notify previous top scorers if their score is beaten
+    if len(leaderboard) > 1 and leaderboard[0]["score"] == score:
+        notify_beaten_scores(new_entry, leaderboard)
+    
+    # Keep only top 100
+    leaderboard = leaderboard[:100]
+    save_leaderboard(leaderboard)
+    
+    return True
+
+
+def get_top_leaderboard(limit=10):
+    """Get top N scores from leaderboard."""
+    leaderboard = load_leaderboard()
+    return leaderboard[:limit]
+
+
+def notify_beaten_scores(new_entry, leaderboard):
+    """Send email notifications to players whose scores were beaten using SendGrid."""
+    if not SENDGRID_API_KEY:
+        print("Warning: SENDGRID_API_KEY not set. Email notifications disabled.")
+        return
+    
+    try:
+        sg = SendGridAPIClient(SENDGRID_API_KEY)
+        
+        # Check if score beats others and send notifications
+        for entry in leaderboard[1:]:
+            if entry.get("email") and new_entry["score"] > entry["score"]:
+                recipient_email = entry.get("email")
+                recipient_name = entry.get("player_name", "Player")
+                
+                # Create HTML email content
+                html_content = f"""
+                <html>
+                    <head>
+                        <style>
+                            body {{ font-family: Arial, sans-serif; background-color: #f5f5f5; }}
+                            .container {{ max-width: 600px; margin: 0 auto; background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
+                            .header {{ color: #a855f7; font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center; }}
+                            .content {{ color: #333; line-height: 1.6; margin-bottom: 20px; }}
+                            .highlight {{ background-color: #f0e6ff; padding: 15px; border-left: 4px solid #a855f7; margin: 15px 0; }}
+                            .score-box {{ background-color: #fef3c7; padding: 15px; border-radius: 6px; text-align: center; margin: 15px 0; }}
+                            .score-old {{ color: #6b7280; font-size: 14px; }}
+                            .score-new {{ color: #a855f7; font-size: 24px; font-weight: bold; }}
+                            .footer {{ color: #9ca3af; font-size: 12px; text-align: center; margin-top: 20px; border-top: 1px solid #e5e7eb; padding-top: 15px; }}
+                            .button {{ display: inline-block; background-color: #a855f7; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; margin: 15px 0; text-align: center; }}
+                        </style>
+                    </head>
+                    <body>
+                        <div class="container">
+                            <div class="header">🏆 Your Leaderboard Score Was Beaten! 🏆</div>
+                            <div class="content">
+                                <p>Hi {recipient_name},</p>
+                                <p>Unfortunately, your Infinite Mode score on the <strong>Kiai Aina</strong> leaderboard has been beaten!</p>
+                                
+                                <div class="highlight">
+                                    <p><strong>{new_entry['player_name']}</strong> just scored <strong>{new_entry['score']} points</strong>!</p>
+                                </div>
+                                
+                                <p>Here's the comparison:</p>
+                                <div class="score-box">
+                                    <div class="score-old">Your Previous Score: {entry['score']} points</div>
+                                    <div style="margin: 10px 0;">→</div>
+                                    <div class="score-new">New #1 Score: {new_entry['score']} points</div>
+                                </div>
+                                
+                                <p>Don't worry! You can challenge them back and reclaim your spot on the leaderboard. Every game is a new opportunity to prove your skills!</p>
+                                
+                                <p style="text-align: center; margin: 20px 0;">
+                                    <a href="http://localhost:5000/leaderboard" class="button">View Leaderboard</a>
+                                </p>
+                                
+                                <p>Keep playing and keep improving! 🎮</p>
+                                <p>Best regards,<br><strong>Kiai Aina Team</strong></p>
+                            </div>
+                            <div class="footer">
+                                <p>This is an automated email from Kiai Aina Infinite Mode Leaderboard. Please do not reply to this email.</p>
+                            </div>
+                        </div>
+                    </body>
+                </html>
+                """
+                
+                # Actual Email version
+                text_content = f"""
+                Your Leaderboard Score Was Beaten!
+                
+                Hi {recipient_name},
+                
+                Your Infinite Mode score on the Kiai Aina leaderboard has been beaten!
+                
+                {new_entry['player_name']} just scored {new_entry['score']} points!
+                
+                Your Previous Score: {entry['score']} points
+                New #1 Score: {new_entry['score']} points
+                
+                Don't worry! You can challenge them back and reclaim your spot on the leaderboard.
+                
+                View Leaderboard: http://localhost:5000/leaderboard
+                
+                Keep playing and keep improving!
+                
+                Best regards,
+                Kiai Aina Team
+                """
+                
+                # Create and send email
+                message = Mail(
+                    from_email=SENDGRID_FROM_EMAIL,
+                    to_emails=To(recipient_email),
+                    subject=f"🏆 Your Kiai Aina Score Was Beaten! 🏆",
+                    plain_text_content=text_content,
+                    html_content=html_content
+                )
+                
+                response = sg.send(message)
+                print(f"✓ Email sent to {recipient_email} - Status: {response.status_code}")
+                
+    except Exception as e:
+        print(f"✗ Error sending email notifications: {e}")
+        print(f"  Make sure SENDGRID_API_KEY is set in your .env file")
+
 
 
 def _build_run_chart(run_history: list[dict]) -> bool:
@@ -79,6 +257,22 @@ def home():
     return render_template("home.html", bg_pic=background_image, title_pic=title_image)
 
 
+@app.route("/difficulty")
+def difficulty():
+    """Display difficulty selection page."""
+    background_image = url_for("static", filename="background.png")
+    return render_template("difficulty.html", bg_pic=background_image)
+
+
+@app.route("/leaderboard")
+def leaderboard():
+    """Display leaderboard."""
+    background_image = url_for("static", filename="background.png")
+    top_scores = get_top_leaderboard(10)
+    leaderboard_data = [(idx, entry) for idx, entry in enumerate(top_scores)]
+    return render_template("leaderboard.html", bg_pic=background_image, leaderboard=leaderboard_data)
+
+
 @app.route("/start", methods=["POST"])
 def start():
     session.clear()
@@ -86,6 +280,7 @@ def start():
     session["score"] = 0
     session["waves_completed"] = 0
     session["run_history"] = []
+    session["difficulty"] = request.form.get("difficulty", "normal")
     return redirect(url_for("game"))
 
 
@@ -413,7 +608,85 @@ def end():
         run_analytics=run_analytics,
         chart_ready=chart_ready,
         chart_image_url=f"{url_for('static', filename='run_summary_chart.png')}?v={session.get('score', 0)}-{total_waves}",
+        difficulty=session.get("difficulty", "normal"),
     )
+
+
+@app.route("/compendium")
+def compendium():
+    """Display Species Compendium with all defenders and invaders."""
+    # Load defenders with metadata
+    natives = load_defender_natives_ordered(DEFENDER_NATIVE_NAMES_ORDERED)
+    dlnr_meta = get_dlnr_meta_by_native_name()
+    
+    defenders_data = []
+    for s in natives:
+        m = dlnr_meta.get(s.name, {})
+        defenders_data.append(
+            {
+                "name": s.name,
+                "display_name": m.get("display_name") or s.name.replace("_", " "),
+                "common_line": m.get("common_line", ""),
+                "image_url": m.get("image_url", ""),
+                "scientific": m.get("scientific", ""),
+                "health": s.health,
+                "attack": s.attack,
+                "facts": s.facts,
+            }
+        )
+    
+    # Load invaders with metadata
+    invader_cards = get_invader_cards_by_name()
+    invaders_data = []
+    for name, card in invader_cards.items():
+        invaders_data.append(
+            {
+                "name": name,
+                "display_name": card.get("display_name", name.replace("_", " ")),
+                "common_line": card.get("common_line", ""),
+                "scientific": card.get("scientific", ""),
+                "health": card.get("health", 0),
+                "attack": card.get("attack", 0),
+                "facts": card.get("facts", []),
+                "description_points": card.get("description_points", []),
+                "image_url": card.get("image_url", ""),
+            }
+        )
+    
+    background_image = url_for("static", filename="background.png")
+    
+    return render_template(
+        "compendium.html",
+        defenders=defenders_data,
+        invaders=invaders_data,
+        bg_pic=background_image,
+    )
+
+
+@app.route("/save-score", methods=["POST"])
+def save_score():
+    """Save infinite mode score to leaderboard."""
+    data = request.get_json()
+    player_name = data.get("player_name", "Anonymous").strip()
+    email = data.get("email", "").strip()
+    
+    if not player_name or not email:
+        return jsonify({"success": False, "message": "Name and email required"}), 400
+    
+    # Validate email format (basic validation)
+    if "@" not in email or "." not in email:
+        return jsonify({"success": False, "message": "Invalid email format"}), 400
+    
+    score = session.get("score", 0)
+    difficulty = session.get("difficulty", "normal")
+    waves = len(session.get("run_history", []))
+    
+    # Only save if infinite mode
+    if difficulty == "infinite":
+        add_to_leaderboard(player_name, email, score, waves, difficulty)
+        return jsonify({"success": True, "message": "Score saved!"}), 200
+    else:
+        return jsonify({"success": False, "message": "Only Infinite mode scores are tracked"}), 400
 
 
 if __name__ == "__main__":

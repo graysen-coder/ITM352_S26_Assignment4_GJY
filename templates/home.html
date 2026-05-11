@@ -89,6 +89,18 @@
             background: linear-gradient(180deg, #4a9c3e, #2d5016);
         }
         
+        .compendium-btn {
+            background: linear-gradient(180deg, #3b82f6, #1e40af);
+        }
+        
+        .difficulty-btn {
+            background: linear-gradient(180deg, #a855f7, #7e22ce);
+        }
+        
+        .leaderboard-btn {
+            background: linear-gradient(180deg, #f59e0b, #d97706);
+        }
+        
         .menu-btn-icon {
             position: absolute;
             left: 20px;
@@ -110,8 +122,25 @@
                     <span class="menu-btn-icon">🌿</span>
                     <span>Start Game</span>
                 </button>
-                <!-- Add more menu buttons here in the future -->
             </form>
+            <a href="/difficulty" style="text-decoration: none; width: 100%;">
+                <button type="button" class="menu-btn difficulty-btn" style="width: 100%;">
+                    <span class="menu-btn-icon">⚙️</span>
+                    <span>Difficulty Select</span>
+                </button>
+            </a>
+            <a href="/leaderboard" style="text-decoration: none; width: 100%;">
+                <button type="button" class="menu-btn leaderboard-btn" style="width: 100%;">
+                    <span class="menu-btn-icon">🏆</span>
+                    <span>Leaderboard</span>
+                </button>
+            </a>
+            <a href="/compendium" style="text-decoration: none; width: 100%;">
+                <button type="button" class="menu-btn compendium-btn" style="width: 100%;">
+                    <span class="menu-btn-icon">📖</span>
+                    <span>Species Compendium</span>
+                </button>
+            </a>
         </div>
     </div>
 </body>
