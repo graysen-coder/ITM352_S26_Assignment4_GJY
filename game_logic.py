@@ -88,7 +88,35 @@ def generate_wave(wave_num, all_species):
     return Wave(wave_num=wave_num, invaders=selected, difficulty=difficulty)
 
 
-def init_battle(team_names, wave, all_species):
+def _display_entity_name(raw_name: str, name_map: dict[str, str] | None) -> str:
+    if name_map and raw_name in name_map:
+        return name_map[raw_name]
+    return raw_name
+
+
+def _display_move_name(raw_move_name: str, defender_slug: str, defender_label: str) -> str:
+    """
+    Replace the defender-name prefix in move labels with card display name.
+    Example: "Nene Move 2" -> "Nēnē Move 2"
+    """
+    base_variants = {
+        defender_slug,
+        defender_slug.replace("_", " "),
+        defender_slug.replace("-", " "),
+    }
+    prefixes = base_variants | {v.title() for v in base_variants}
+    for prefix in prefixes:
+        prefix_with_space = f"{prefix} "
+        if raw_move_name.startswith(prefix_with_space):
+            return f"{defender_label} {raw_move_name[len(prefix_with_space):]}"
+    return raw_move_name
+
+
+def init_battle(
+    team_names,
+    wave,
+    all_species,
+):
     """
     Build a plain-dict battle state (JSON-serializable for Flask session).
     Energy starts at 5, gains 3 per turn, caps at 10.
@@ -126,10 +154,28 @@ def init_battle(team_names, wave, all_species):
         "log": [],
         "battle_over": False,
         "player_won": False,
+        "analytics": {
+            "turns_taken": 0,
+            "total_damage_dealt": 0,
+            "total_damage_taken": 0,
+            "max_damage_received": 0,
+            "energy_spent": 0,
+            "invaders_defeated": 0,
+            "defenders_fainted": 0,
+            "max_single_hit": 0,
+            "move_usage": {},
+            "defender_usage": {},
+        },
     }
 
 
-def process_turn(battle_state, move_name, all_species):
+def process_turn(
+    battle_state,
+    move_name,
+    all_species,
+    defender_name_map: dict[str, str] | None = None,
+    invader_name_map: dict[str, str] | None = None,
+):
     """
     Resolve one player turn: player uses move_name, invader auto-attacks.
     Mutates battle_state in place. No-ops on invalid moves.
@@ -149,20 +195,46 @@ def process_turn(battle_state, move_name, all_species):
 
     log = []
 
+    analytics = battle_state.setdefault("analytics", {})
+    analytics.setdefault("move_usage", {})
+    analytics.setdefault("defender_usage", {})
+    defender_name_map = defender_name_map or {}
+    invader_name_map = invader_name_map or {}
+    active_name_display = _display_entity_name(active["name"], defender_name_map)
+    invader_name_display = _display_entity_name(inv_state["name"], invader_name_map)
+    move_display = _display_move_name(move.name, active["name"], active_name_display)
+    analytics["turns_taken"] = analytics.get("turns_taken", 0) + 1
+    analytics["defender_usage"][active["name"]] = (
+        analytics["defender_usage"].get(active["name"], 0) + 1
+    )
+
     # Player attacks
+    inv_hp_before = inv_state["hp"]
     battle_state["energy"] -= move.energy_cost
     inv_state["hp"] = max(0, inv_state["hp"] - move.damage)
-    log.append(f"{active['name']} used {move.name} — {move.damage} damage!")
+    actual_player_damage = inv_hp_before - inv_state["hp"]
+    analytics["total_damage_dealt"] = analytics.get("total_damage_dealt", 0) + actual_player_damage
+    analytics["energy_spent"] = analytics.get("energy_spent", 0) + move.energy_cost
+    analytics["max_single_hit"] = max(analytics.get("max_single_hit", 0), actual_player_damage)
+    analytics["move_usage"][move.name] = analytics["move_usage"].get(move.name, 0) + 1
+    log.append(f"{active_name_display} used {move_display} — {move.damage} damage!")
 
     # Invader counter-attacks if still alive
     if inv_state["hp"] > 0 and inv_species:
         inv_dmg = int(inv_species.attack * battle_state["difficulty"])
+        active_hp_before = active["hp"]
         active["hp"] = max(0, active["hp"] - inv_dmg)
-        log.append(f"{inv_state['name']} struck back for {inv_dmg} damage!")
+        actual_invader_damage = active_hp_before - active["hp"]
+        analytics["total_damage_taken"] = analytics.get("total_damage_taken", 0) + actual_invader_damage
+        analytics["max_damage_received"] = max(
+            analytics.get("max_damage_received", 0), actual_invader_damage
+        )
+        log.append(f"{invader_name_display} struck back for {inv_dmg} damage!")
 
     # Check: invader fainted
     if inv_state["hp"] <= 0:
-        log.append(f"{inv_state['name']} was defeated!")
+        log.append(f"{invader_name_display} was defeated!")
+        analytics["invaders_defeated"] = analytics.get("invaders_defeated", 0) + 1
         battle_state["invader_idx"] += 1
         if battle_state["invader_idx"] >= len(battle_state["invaders"]):
             battle_state["battle_over"] = True
@@ -170,7 +242,8 @@ def process_turn(battle_state, move_name, all_species):
 
     # Check: active defender fainted
     if active["hp"] <= 0:
-        log.append(f"{active['name']} fainted!")
+        log.append(f"{active_name_display} fainted!")
+        analytics["defenders_fainted"] = analytics.get("defenders_fainted", 0) + 1
         battle_state["active_idx"] += 1
         if battle_state["active_idx"] >= len(battle_state["team"]):
             battle_state["battle_over"] = True

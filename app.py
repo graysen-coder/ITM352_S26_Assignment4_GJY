@@ -1,3 +1,6 @@
+from pathlib import Path
+import random
+
 from flask import Flask, render_template, request, redirect, url_for, session
 from defender_cards import DEFENDER_NATIVE_NAMES_ORDERED, get_dlnr_meta_by_native_name
 from invader_cards import get_invader_cards_by_name
@@ -19,6 +22,54 @@ TEAM_SIZE = 3
 
 def get_all_species():
     return load_species()
+
+
+def _build_run_chart(run_history: list[dict]) -> bool:
+    """
+    Build a static run chart image using pandas + matplotlib.
+    Returns True when chart file was written, False if charting is unavailable.
+    """
+    if not run_history:
+        return False
+    try:
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+        import pandas as pd
+    except Exception:
+        return False
+
+    df = pd.DataFrame(run_history)
+    if df.empty:
+        return False
+
+    for col in ("wave_num", "points", "damage_dealt", "damage_taken"):
+        if col not in df.columns:
+            df[col] = 0
+    df = df.sort_values("wave_num")
+
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(9, 7), constrained_layout=True)
+
+    colors = ["#2d6a4f" if bool(v) else "#c0392b" for v in df.get("player_won", [])]
+    ax1.bar(df["wave_num"], df["points"], color=colors)
+    ax1.set_title("Points by Wave")
+    ax1.set_xlabel("Wave")
+    ax1.set_ylabel("Points")
+    ax1.grid(axis="y", alpha=0.25)
+
+    ax2.plot(df["wave_num"], df["damage_dealt"], marker="o", color="#2563eb", label="Damage Dealt")
+    ax2.plot(df["wave_num"], df["damage_taken"], marker="o", color="#dc2626", label="Damage Taken")
+    ax2.set_title("Damage Trend by Wave")
+    ax2.set_xlabel("Wave")
+    ax2.set_ylabel("Damage")
+    ax2.grid(alpha=0.25)
+    ax2.legend()
+
+    out_path = Path(__file__).resolve().parent / "static" / "run_summary_chart.png"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(out_path, dpi=140)
+    plt.close(fig)
+    return True
 
 
 @app.route("/")
@@ -150,7 +201,21 @@ def battle_action():
 
     if move_name and not state["battle_over"]:
         all_species = get_all_species()
-        process_turn(state, move_name, all_species)
+        defender_name_map = {
+            slug: meta.get("display_name") or slug
+            for slug, meta in get_dlnr_meta_by_native_name().items()
+        }
+        invader_name_map = {
+            slug: meta.get("display_name") or slug
+            for slug, meta in get_invader_cards_by_name().items()
+        }
+        process_turn(
+            state,
+            move_name,
+            all_species,
+            defender_name_map=defender_name_map,
+            invader_name_map=invader_name_map,
+        )
         session["battle"] = state
 
     if state["battle_over"]:
@@ -158,10 +223,32 @@ def battle_action():
         session["score"] = session.get("score", 0) + points
 
         history = session.get("run_history", [])
+        wave_analytics = state.get("analytics", {})
+        defender_usage = wave_analytics.get("defender_usage", {})
+        top_defender_slug = None
+        if defender_usage:
+            top_defender_slug = max(defender_usage.items(), key=lambda item: item[1])[0]
+        defender_name_map = {
+            slug: meta.get("display_name") or slug
+            for slug, meta in get_dlnr_meta_by_native_name().items()
+        }
         history.append({
             "wave_num": state["wave_num"],
             "player_won": state["player_won"],
             "points": points,
+            "turns_taken": wave_analytics.get("turns_taken", 0),
+            "damage_dealt": wave_analytics.get("total_damage_dealt", 0),
+            "damage_taken": wave_analytics.get("total_damage_taken", 0),
+            "energy_spent": wave_analytics.get("energy_spent", 0),
+            "max_damage_dealt": wave_analytics.get("max_single_hit", 0),
+            "max_damage_received": wave_analytics.get("max_damage_received", 0),
+            "invaders_defeated": wave_analytics.get("invaders_defeated", 0),
+            "defenders_fainted": wave_analytics.get("defenders_fainted", 0),
+            "most_used_defender": (
+                defender_name_map.get(top_defender_slug, top_defender_slug)
+                if top_defender_slug
+                else "N/A"
+            ),
         })
         session["run_history"] = history
 
@@ -171,20 +258,8 @@ def battle_action():
         game_over = not state["player_won"]
         session["game_over"] = game_over
 
-        # Collect invader facts for result screen
-        all_species = get_all_species()
-        species_map = {s.name: s for s in all_species}
-        invaders = load_invaders()
-        inv_map = {s.name: s for s in invaders}
-        invader_cards = get_invader_cards_by_name()
-        facts = []
-        for inv in state["invaders"]:
-            s = inv_map.get(inv["name"]) or species_map.get(inv["name"])
-            if s and s.facts:
-                inv_card = invader_cards.get(inv["name"], {})
-                label = inv_card.get("display_name") or inv["name"]
-                facts.append({"species": label, "fact": s.facts[0]})
-        session["last_facts"] = facts
+        # Keep session small: store only invader slugs, build facts in /result.
+        session["last_fact_invader_names"] = [inv["name"] for inv in state["invaders"]]
 
         return redirect(url_for("result"))
 
@@ -197,12 +272,77 @@ def result():
         return redirect(url_for("home"))
 
     state = session["battle"]
+    analytics = state.get("analytics", {})
+    turns = analytics.get("turns_taken", 0)
+    dealt = analytics.get("total_damage_dealt", 0)
+    taken = analytics.get("total_damage_taken", 0)
+    max_received = analytics.get("max_damage_received", 0)
+    energy_spent = analytics.get("energy_spent", 0)
+    invaders_defeated = analytics.get("invaders_defeated", 0)
+    defenders_fainted = analytics.get("defenders_fainted", 0)
+    max_hit = analytics.get("max_single_hit", 0)
+    move_usage = analytics.get("move_usage", {})
+    defender_usage = analytics.get("defender_usage", {})
+    top_move = None
+    top_defender = None
+    if move_usage:
+        top_move = max(move_usage.items(), key=lambda item: item[1])
+    if defender_usage:
+        top_defender = max(defender_usage.items(), key=lambda item: item[1])
+    defender_labels = get_dlnr_meta_by_native_name()
+
+    total_team_max_hp = sum(m.get("max_hp", 0) for m in state.get("team", []))
+    total_team_hp = sum(m.get("hp", 0) for m in state.get("team", []))
+    team_survival_pct = (
+        round((total_team_hp / total_team_max_hp) * 100, 1) if total_team_max_hp else 0.0
+    )
+
+    analytics_view = {
+        "turns_taken": turns,
+        "avg_damage_per_turn": round(dealt / turns, 1) if turns else 0.0,
+        "avg_energy_per_turn": round(energy_spent / turns, 2) if turns else 0.0,
+        "total_damage_dealt": dealt,
+        "total_damage_taken": taken,
+        "max_damage_received": max_received,
+        "invaders_defeated": invaders_defeated,
+        "defenders_fainted": defenders_fainted,
+        "max_damage_dealt": max_hit,
+        "top_move_name": top_move[0] if top_move else "N/A",
+        "top_move_count": top_move[1] if top_move else 0,
+        "top_defender_name": (
+            (defender_labels.get(top_defender[0], {}).get("display_name") or top_defender[0])
+            if top_defender
+            else "N/A"
+        ),
+        "team_survival_pct": team_survival_pct,
+    }
+
+    facts_source = session.get("last_fact_invader_names", [])
+    invader_cards = get_invader_cards_by_name()
+    facts_view = []
+    for inv_name in facts_source:
+        inv_card = invader_cards.get(inv_name, {})
+        desc_all = list(inv_card.get("description_points") or [])
+        impact_all = list(inv_card.get("impact_points") or [])
+        desc_pick = random.sample(desc_all, 3) if len(desc_all) > 3 else desc_all
+        impact_pick = random.sample(impact_all, 3) if len(impact_all) > 3 else impact_all
+        facts_view.append(
+            {
+                "species": inv_card.get("display_name") or inv_name,
+                "title_line": inv_card.get("title_line") or inv_name,
+                "profile_url": inv_card.get("profile_url"),
+                "description_points": desc_pick,
+                "impact_points": impact_pick,
+            }
+        )
+
     return render_template(
         "result.html",
         state=state,
         score=session["score"],
         game_over=session.get("game_over", False),
-        facts=session.get("last_facts", []),
+        facts=facts_view,
+        analytics=analytics_view,
     )
 
 
@@ -217,12 +357,62 @@ def next_wave():
 
 @app.route("/end")
 def end():
+    run_history = session.get("run_history", [])
+    total_waves = len(run_history)
+    total_turns = sum(w.get("turns_taken", 0) for w in run_history)
+    total_dealt = sum(w.get("damage_dealt", 0) for w in run_history)
+    total_taken = sum(w.get("damage_taken", 0) for w in run_history)
+    total_energy = sum(w.get("energy_spent", 0) for w in run_history)
+    max_damage_dealt = max((w.get("max_damage_dealt", 0) for w in run_history), default=0)
+    max_damage_received = max((w.get("max_damage_received", 0) for w in run_history), default=0)
+    total_invaders_defeated = sum(w.get("invaders_defeated", 0) for w in run_history)
+    total_defenders_fainted = sum(w.get("defenders_fainted", 0) for w in run_history)
+    wins = sum(1 for w in run_history if w.get("player_won"))
+    losses = total_waves - wins
+    best_wave = max(run_history, key=lambda w: w.get("points", 0), default=None)
+    defender_counts: dict[str, int] = {}
+    for w in run_history:
+        name = w.get("most_used_defender")
+        if name and name != "N/A":
+            defender_counts[name] = defender_counts.get(name, 0) + 1
+    top_defender_name = (
+        max(defender_counts.items(), key=lambda kv: kv[1])[0]
+        if defender_counts
+        else "N/A"
+    )
+
+    chart_ready = _build_run_chart(run_history)
+
+    run_analytics = {
+        "total_waves": total_waves,
+        "wins": wins,
+        "losses": losses,
+        "win_rate_pct": round((wins / total_waves) * 100, 1) if total_waves else 0.0,
+        "turns_taken": total_turns,
+        "avg_damage_per_turn": round(total_dealt / total_turns, 1) if total_turns else 0.0,
+        "avg_energy_per_turn": round(total_energy / total_turns, 2) if total_turns else 0.0,
+        "team_survival_pct": round((wins / total_waves) * 100, 1) if total_waves else 0.0,
+        "total_damage_dealt": total_dealt,
+        "total_damage_taken": total_taken,
+        "max_damage_received": max_damage_received,
+        "max_damage_dealt": max_damage_dealt,
+        "total_invaders_defeated": total_invaders_defeated,
+        "total_defenders_fainted": total_defenders_fainted,
+        "top_move_name": "N/A",
+        "top_defender_name": top_defender_name,
+        "best_wave_num": best_wave.get("wave_num") if best_wave else "N/A",
+        "best_wave_points": best_wave.get("points", 0) if best_wave else 0,
+    }
+
     return render_template(
         "end.html",
         score=session.get("score", 0),
-        run_history=session.get("run_history", []),
+        run_history=run_history,
         wave_num=session.get("wave_num", 1),
         waves_completed=session.get("waves_completed", 0),
+        run_analytics=run_analytics,
+        chart_ready=chart_ready,
+        chart_image_url=f"{url_for('static', filename='run_summary_chart.png')}?v={session.get('score', 0)}-{total_waves}",
     )
 
 

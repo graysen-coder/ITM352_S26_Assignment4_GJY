@@ -17,10 +17,34 @@
       "Coqui (Eleutherodactylus coqui) — https://dlnr.hawaii.gov/hisc/coqui-frog/"
     ],
     "display_name": "Coqui",
+    "title_line": "Coqui (Eleutherodactylus coqui)",
     "common_line": "Common: Coqui",
     "scientific": "Scientific: Eleutherodactylus coqui",
     "profile_url": "https://dlnr.hawaii.gov/hisc/coqui-frog/",
-    "image_url": null
+    "description_points": [
+      "The coqui is a small, nocturnal, 1-2 inch tree frog with colors varying from tan to dark brown.",
+      "It has a round body shape and a broad rounded snout with distinctive toe pads.",
+      "They make a distinctive co-qui, (pronounced \"ko-kee\") vocalization that is rather loud. (Can reach up to 95 decibels)",
+      "They are found on ground level and in trees and bushes, but their calls are primarily made from 1-2m (3-7 feet) high.",
+      "\"Native to Puerto Rico, accidentally introduced to Hawaiʻi hidden in plants around or before 1988.\" (MIISC)",
+      "\"Lays egg clusters in moist damp areas, males sit on eggs.\" (BIISC)",
+      "There is a common look alike called the greenhouse frog. See the differences here."
+    ],
+    "impact_points": [
+      "Hawaiian populations reach densities of up to 91,000 frogs/hectare (Beard et al., 2009), two to three times higher than estimates for native populations in Puerto Rico (Woolbright et al., 2006), and among the highest known for any amphibian worldwide.",
+      "Eat huge quantities of insects, removing insects from forest floor to treetops. This results in the loss of insect services, such as pollination.",
+      "Disrupts the balance of vulnerable native ecosystems and has been known to change the chemical composition of the forest floor. (KISC)",
+      "Produces loud, incessant and annoying call from dusk until dawn. (Up to 95 dB – similar to a motorcycle engine) Hear a recording of a single frog progressing into multiple frogs",
+      "Potential food source for snakes if they were to arrive.",
+      "Disclosure requirement for real estate transactions, has resulted in decreased property values in some locations.",
+      "\"Presence of coqui hinders export of plant sales.\" (KISC)",
+      "Adverse economic impacts on tourism.",
+      "Create traps that take advantage of the frogs nesting behavior by hanging PVC pipe. (Instructions on how to make trap)",
+      "\"Citric acid is the only product labeled for controlling coqui in Hawaii. Frogs breathe through their skin so they are highly sensitive to chemical contact. Spray solution on infested plants to kill coqui frog eggs, juveniles, and adults. Treatments can be repeated every 2 weeks.\" (BIISC)",
+      "You can make your landscaping less coqui-friendly by cutting tall grass, not keeping bromeliads, chipping or eliminating green waste, removing dead leaves from banana, ti, and other plants with large leaves, and thinning understory vegetation on your property.",
+      "You can hand catch frogs. \"Once captured in the bag, frogs can be killed humanely by placing them in hot soapy water or in the freezer.\" (CTAHR)"
+    ],
+    "image_url": "https://www.kauaiisc.org/wp-content/uploads/Closeup-of-male-coqui.jpg"
   },
   {
     "name": "coconut-rhinoceros-beetle",
@@ -40,10 +64,29 @@
       "Coconut Rhinoceros Beetle (Oryctes rhinoceros) — https://dlnr.hawaii.gov/hisc/info/invasive-species-profiles/coconut-rhinoceros-beetle/"
     ],
     "display_name": "Coconut Rhinoceros Beetle",
+    "title_line": "Coconut Rhinoceros Beetle (Oryctes rhinoceros)",
     "common_line": "Common: Coconut Rhinoceros Beetle",
     "scientific": "Scientific: Oryctes rhinoceros",
     "profile_url": "https://dlnr.hawaii.gov/hisc/info/invasive-species-profiles/coconut-rhinoceros-beetle/",
-    "image_url": null
+    "description_points": [
+      "Adult: 2” length, black, with a horn / Larva: Up to 3” white, “C-shaped” body",
+      "Adult CRB are nocturnal and can fly up to two miles if looking for a food source. Female Beetles lay 50-140 eggs in their lifetime (4-9 months)",
+      "The Coconut Rhinoceros Beetle is native to Africa, China, Myanmar/India, and Southeast Asia",
+      "First found in Hawaii in 2013 at the Joint Base Pearl Harbor-Hickam",
+      "In 2023 multiple populations were discovered on Kauai",
+      "Siting’s also occurred on Maui and Hawaii islands, but established populations have not been confirmed",
+      "They do not bite, but CRBResponse advises they should be handled with care as they may carry disease because they live in dirt and mulch"
+    ],
+    "impact_points": [
+      "CRB jeopardizes the economy, the entire ecosystem, agriculture, and food security (Citation – Maui County)",
+      "To feed, CRB bite and bore into emerging palm fronds creating holes in the top of the tree",
+      "CRB can kill palms and other trees if they burrow and eat below the bark",
+      "CRB prefer to feed on coconut, royal, date, and fan palms (including Pitchardia), but if these trees are unavailable CRB will feed on Hala, Taro, Banana, Pineapple, and Sugarcane",
+      "Adult CRB feed on tree sap but do not typically stay in trees very long. Larva will feed on nearly any moist, rotting or composting organic matter from fallen logs, tree stumps, green waste, grass clippings, manure, and sawdust piles",
+      "On Hawaiʻi Island, these invasive beetles pose a serious threat to five endemic species of loulu palms (Pritchardia beccariana, P. gordonii, P. lanigera, P. schattaueri, and P. maideniana), with three of these species already designated as endangered or critically imperiled",
+      "CRB damage cultural staples like Hala and Taro which impacts Native Hawaiian cultural practices. Protecting these plants is critical for preserving local heritage and maintaining a healthy, balanced ecosystem and local economy (Maui County)"
+    ],
+    "image_url": "https://dlnr.hawaii.gov/hisc/files/2024/03/crb-response-pic-1.jpg"
   },
   {
     "name": "brown-tree-snake",
@@ -63,10 +106,28 @@
       "Brown Tree Snake (Boiga irregularis) — https://dlnr.hawaii.gov/hisc/info/species/brown-tree-snake/"
     ],
     "display_name": "Brown Tree Snake",
+    "title_line": "Brown Tree Snake (Boiga irregularis)",
     "common_line": "Common: Brown Tree Snake",
     "scientific": "Scientific: Boiga irregularis",
     "profile_url": "https://dlnr.hawaii.gov/hisc/info/species/brown-tree-snake/",
-    "image_url": null
+    "description_points": [
+      "Snake with yellowish to dark brown back, sometimes with mottled bands. Underside is cream to yellow colored. Head wider than body, with eyes that are cat-like (the pupils are vertical)",
+      "Nocturnal, lives mostly in trees, although frequently seen on the ground.",
+      "Length is 45 cm (18 inches) when first hatches from egg, may grow to 3 m (9 feet) in length, although most frequently 1-2 m (3-6 feet)",
+      "Able to reproduce at three years of age",
+      "Native to the South Pacific including the Solomon Islands, New Guinea, and Northern Australia. Believed to have been accidentally introduced to Guam in the 1940s hidden in cargo."
+    ],
+    "impact_points": [
+      "On Guam, the population of Brown tree snakes (BTS) was once around 50 snakes per acre. It is now estimated to be aro und 10-21 BTS per acre. The BTS has a devastating impact on islands that it is not native to because it is not controlled by predators, diseases, or competitors as it is in the snake’s native range.",
+      "BTS eat birds, bird and reptile eggs, lizards, small mammals such as rats and mice, and even small household pets. They are responsible for the extinction of 9 of 13 forest bird species and 3 species of lizard. Other species of birds have been reduced to very low numbers and seabirds such as terns, noddys and shearwaters no longer nest on the island.",
+      "In the absence of preferred prey (birds and small mammals), BTS will feed on lizards and skinks, which reproduce faster and are able to sustain the snake population at abnormally high levels.",
+      "Ecological impacts of the absence of birds and lizards (largely insect-eating species) include a rise in the abundance of insects, which may affect crop production.",
+      "The Brown tree snake causes frequent electrical power outages by climbing power lines and getting into transformers and electrical boxes. Snakes have caused more than 1600 power outages in the 20-year period of 1978-1997. Recent estimates reflect that BTS cause nearly 200 outages per year currently. Costs to the island’s economy have exceeded $4.5 M per year over a 7-year period without considering transformers and damages inside electrical substations.",
+      "Not known to be present in Hawaii at this time, although a total of eight Brown tree snakes have been found live or dead in Hawaii between 1981 and 1998. All snakes were associated with the movement of civilian and military vehicles or cargo from Guam. No special searches were conducted for cargo or crafts as they were leaving Guam or arriving from Guam in Hawaii prior to the 1980s, as the problem on Guam was still coming to light.",
+      "An economic study by the University of Hawai’i estimated that the introduction of the BTS to Hawai’i could cause between $28,500,000 and $405,000,000 annually. A new assessment by the USDA National Wildlife Research Center puts the actual cost of BTS at $1.7 billion per year if introduced to Hawai’i.",
+      "In 2020, the U.S. Department of Interior announced that $3.4 million in grant funding will go towards the suppression and control of BTS in Guam, and towards prevention, detection, and rapid response efforts in Commonwealth of the Northern Mariana Islands and Hawai’i."
+    ],
+    "image_url": "https://www.biisc.org/wp-content/uploads/brown-tree-snake_ccPavel-Kirillov.jpeg"
   },
   {
     "name": "little-fire-ant-lfa",
@@ -86,10 +147,34 @@
       "Little Fire Ant (Wasmannia auropunctata) — https://dlnr.hawaii.gov/hisc/little-fire-ant-lfa/"
     ],
     "display_name": "Little Fire Ant",
+    "title_line": "Little Fire Ant (Wasmannia auropunctata)",
     "common_line": "Common: Little Fire Ant",
     "scientific": "Scientific: Wasmannia auropunctata",
     "profile_url": "https://dlnr.hawaii.gov/hisc/little-fire-ant-lfa/",
-    "image_url": null
+    "description_points": [
+      "This ant is a uniform yellow-red to light brown in color, all workers are 1.5 mm in length (half the size of a sesame seed, or as long as a penny is thick, about 1/16\").",
+      "Little fire ant does NOT build mounded dirt nests, and nests in a variety of habitats including in trees, around potted plants, irrigation lines, and in electrical boxes.",
+      "They are slow-moving and easily dislodged from leaves, plants, and trees.",
+      "They often sting on neck, arms, and torso (LFA infestations are often discovered when ants fall on people from above).",
+      "Check out the Hawaii Ant Lab Field Guide on how to identify Little fire ants here.",
+      "\"Prefers moist conditions, forming colonies on the ground AND in trees.\" (MISC)",
+      "\"It is native to South America but has invaded tropical and sub-tropical regions around the world from Africa to Israel to Australia to the Galapagos Islands. It is even known as a greenhouse pest in colder areas such as Europe and Canada!\" (BIISC)",
+      "\"Through DNA studies, we can see that the LFA we have in Hawai‛i are most closely related to invasive colonies in Florida. It is thought that they were accidentally introduced to Hawai‛i Island on shipments of plants to nurseries in Puna sometime in the 1990s.\" (BIISC)"
+    ],
+    "impact_points": [
+      "Delivers a painful sting when disturbed. Welts can last for weeks.",
+      "Infests agricultural fields and farms, where they damage crops and sting workers.",
+      "Promotes plant pests such as aphids, white flies and scale insects, which secrete plant sap that the ants eat. In turn, the ants protect these insects from natural predators and parasites.",
+      "Can infest houses, beds, furniture and food.",
+      "They may sting, and even blind, pets such as cats and dogs.",
+      "\"Infest bee hives, preying on the larvae and eventually destroy the hive.\" (MISC)",
+      "Costly and difficult for property owners to manage large infestations. Often requires repeated and on-going treatment, especially where infestation is widespread on Hawaiʻi Island.",
+      "In the Galapagos, eats tortoise hatchlings and attacks the eyes of adult tortoises.",
+      "\"It is important to survey your property when bringing in new plants/materials, if you suspect LFA on your property, or if neighboring properties have an LFA infestation. LFA are tiny and can be living on your property unnoticed.\" (BIISC – Find info on how to survey here)",
+      "There are multiple different products for treating LFA such as granular baits, insect growth regulators, and barrier treatments.",
+      "\"Colonies can recover after a single application, so any effective plan will involve multiple applications. Whatever bait product you choose, plan to treat your property with a bait product every 4-6 weeks for a year in order to wipe out all of the nests!\" (BIISC)"
+    ],
+    "image_url": "https://dlnr.hawaii.gov/hisc/files/2024/06/IMG_2728-1.jpg"
   },
   {
     "name": "naio-thrips",
@@ -109,10 +194,24 @@
       "Naio Thrips (Klambothrips myopori) — https://dlnr.hawaii.gov/hisc/info/species/naio-thrips/"
     ],
     "display_name": "Naio Thrips",
+    "title_line": "Naio Thrips (Klambothrips myopori)",
     "common_line": "Common: Naio Thrips",
     "scientific": "Scientific: Klambothrips myopori",
     "profile_url": "https://dlnr.hawaii.gov/hisc/info/species/naio-thrips/",
-    "image_url": null
+    "description_points": [
+      "Naio thrips are insects which attacks the naio, a native tree species that is extremely important to Hawai’i’s ecosystems.",
+      "Thrips are small sap-sucking insects with feathery wings.",
+      "They can cause scarring of leaf, flower, and fruit surfaces leading to lethal plant damage.",
+      "Naio thrips can be found on many Myoporum species, but is especially noticeable on naio (Myoporum sandwicense).",
+      "The leaf curling and gall formation effects of thrips on naio plants will be noticed before any insects are seen.",
+      "These thrips are small, less than 1/20th inch long, and are shiny dark brown with a noticeable posterior tube.",
+      "Immature thrips are similar in shape but are yellow to orange in color."
+    ],
+    "impact_points": [
+      "Naio thrips are causing widespread damage on the popular landscaping Myoporum plants in southern California and the San Francisco area.",
+      "In Hawaiʻi, this new pest can potentially have devastating effects on our native naio trees which are an important component of lowland and coastal dry forest and comprise roughly one half of the plant biomass of the māmane-naio forest ecosystem."
+    ],
+    "image_url": "https://dlnr.hawaii.gov/hisc/files/2016/05/myoporum_04.jpg"
   },
   {
     "name": "mongoose-urva-auropunctata",
@@ -132,9 +231,21 @@
       "Mongoose (Herpestes javanicus) — https://dlnr.hawaii.gov/hisc/mongoose-urva-auropunctata/"
     ],
     "display_name": "Mongoose",
+    "title_line": "Mongoose (Herpestes javanicus)",
     "common_line": "Common: Mongoose",
     "scientific": "Scientific: Herpestes javanicus",
     "profile_url": "https://dlnr.hawaii.gov/hisc/mongoose-urva-auropunctata/",
-    "image_url": null
+    "description_points": [
+      "Mongoose are a weasel-like animal totaling about 26″ in length with a long, brownish body, short legs and a tail as long as its body.",
+      "They have small rounded ears and a pointed nose.",
+      "The mongoose is active during the day and generally sleeps in dens at night."
+    ],
+    "impact_points": [
+      "Mongoose are opportunistic feeders that will eat birds, small mammals, reptiles, insects, fruits, and plants.",
+      "They prey on the eggs and hatchlings of native ground nesting birds and endangered sea turtles.",
+      "The small Indian mongoose has been blamed with the extinction of ground-nesting birds in Jamaica and Fiji and commonly kill birds, including 8 federally listed endangered Hawaiian birds, such as the Hawaiian crow (‘alalā), petrels (ʻuʻau) and Hawaiian goose (nēnē).",
+      "It was estimated in 1999 that mongoose cause $50 million in damages to Hawai`i and Puerto Rico annually."
+    ],
+    "image_url": "https://www.olaproperties.com/wp-content/uploads/2021/10/MONGOOSE-IN-HAWAII-scaled.jpg"
   }
 ]

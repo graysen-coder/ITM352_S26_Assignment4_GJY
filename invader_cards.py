@@ -13,10 +13,11 @@ _cache: dict[str, dict[str, Any]] | None = None
 def get_invader_cards_by_name(refresh: bool = False) -> dict[str, dict[str, Any]]:
     global _cache
     if _cache is None or refresh:
-        if not _ALPHA_PATH.is_file():
-            _cache = {}
-        else:
-            with _ALPHA_PATH.open(encoding="utf-8") as f:
-                data = json.load(f)
-            _cache = {e["name"]: e for e in data if isinstance(e, dict) and "name" in e}
+        with _ALPHA_PATH.open(encoding="utf-8") as alpha_file:
+            card_entries = json.load(alpha_file)
+        _cache = {
+            entry["name"]: entry
+            for entry in card_entries
+            if isinstance(entry, dict) and "name" in entry
+        }
     return _cache

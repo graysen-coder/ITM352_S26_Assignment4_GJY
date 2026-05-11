@@ -28,80 +28,79 @@ KEY_BY_SLUG: dict[str, str] = {
 
 
 def _session() -> requests.Session:
-    s = requests.Session()
-    s.headers.update({"User-Agent": USER_AGENT})
-    return s
+    http_session = requests.Session()
+    http_session.headers.update({"User-Agent": USER_AGENT})
+    return http_session
 
 
 def _pick_best_thumbnail(src: str, srcset: str | None) -> str:
-    """Prefer 768w from srcset when present; else largest listed width; else src."""
     if not srcset:
         return src
     best_url = None
-    best_w = -1
-    w768 = None
-    for part in srcset.split(","):
-        part = part.strip()
-        m = re.match(r"(\S+)\s+(\d+)w$", part)
-        if not m:
+    largest_width = -1
+    preferred_768_url = None
+    for srcset_part in srcset.split(","):
+        srcset_part = srcset_part.strip()
+        srcset_match = re.match(r"(\S+)\s+(\d+)w$", srcset_part)
+        if not srcset_match:
             continue
-        url, w = m.group(1), int(m.group(2))
-        if w == 768:
-            w768 = url
-        if w > best_w:
-            best_w = w
+        url, width = srcset_match.group(1), int(srcset_match.group(2))
+        if width == 768:
+            preferred_768_url = url
+        if width > largest_width:
+            largest_width = width
             best_url = url
-    if w768:
-        return w768
+    if preferred_768_url:
+        return preferred_768_url
     if best_url:
         return best_url
     return src
 
 
 def _listing_thumbnail_and_profile(soup: BeautifulSoup, slug: str) -> tuple[str, str]:
-    """Match the species anchor, then walk up until a sibling subtree contains the card image."""
+    """Return best thumbnail URL + profile URL for a bird slug from index page."""
     needle = f"/wildlife/birds/{slug}/"
-    for a in soup.find_all("a", href=True):
-        if needle not in a["href"]:
+    for anchor in soup.find_all("a", href=True):
+        if needle not in anchor["href"]:
             continue
-        el = a
+        current_element = anchor
         for _ in range(12):
-            if el is None:
+            if current_element is None:
                 break
-            im = el.find("img", src=True)
-            if im:
-                thumb = _pick_best_thumbnail(im["src"], im.get("srcset"))
-                href = a["href"]
+            image_tag = current_element.find("img", src=True)
+            if image_tag:
+                thumbnail_url = _pick_best_thumbnail(image_tag["src"], image_tag.get("srcset"))
+                href = anchor["href"]
                 profile_url = href if href.endswith("/") else href + "/"
-                return thumb, profile_url
-            el = el.parent
+                return thumbnail_url, profile_url
+            current_element = current_element.parent
     raise ValueError(f"No listing thumbnail + link for slug={slug!r}")
 
 
 def _parse_names_section(soup: BeautifulSoup) -> tuple[str | None, str | None, str | None]:
-    """Returns (olelo, common, scientific_display) from #### Names list."""
-    names_h4 = None
-    for h4 in soup.find_all("h4"):
-        if h4.get_text(strip=True).lower() == "names":
-            names_h4 = h4
+    """Returns (olelo, common, scientific_display)."""
+    names_header = None
+    for heading in soup.find_all("h4"):
+        if heading.get_text(strip=True).lower() == "names":
+            names_header = heading
             break
-    if not names_h4:
+    if not names_header:
         return None, None, None
-    ul = names_h4.find_next_sibling("ul")
-    if not ul:
+    names_list = names_header.find_next_sibling("ul")
+    if not names_list:
         return None, None, None
     olelo = common = None
     scientific_line: str | None = None
-    for li in ul.find_all("li"):
-        t = li.get_text(" ", strip=True)
-        low = t.lower()
-        if low.startswith("scientific:"):
-            scientific_line = t
-        elif "ōlelo" in low or "olelo" in low:
-            if ":" in t:
-                olelo = t.split(":", 1)[1].strip()
-        elif low.startswith("common:"):
-            common = t.split(":", 1)[1].strip()
+    for list_item in names_list.find_all("li"):
+        text = list_item.get_text(" ", strip=True)
+        text_lower = text.lower()
+        if text_lower.startswith("scientific:"):
+            scientific_line = text
+        elif "ōlelo" in text_lower or "olelo" in text_lower:
+            if ":" in text:
+                olelo = text.split(":", 1)[1].strip()
+        elif text_lower.startswith("common:"):
+            common = text.split(":", 1)[1].strip()
     return olelo, common, scientific_line
 
 
@@ -119,10 +118,10 @@ def _display_name_from_detail(soup: BeautifulSoup) -> str:
 
 def _short_name_before_comma(full: str) -> str:
     """Card title: substring before the first comma, else full string trimmed."""
-    t = (full or "").strip()
-    if "," in t:
-        return t.split(",", 1)[0].strip()
-    return t
+    full_text = (full or "").strip()
+    if "," in full_text:
+        return full_text.split(",", 1)[0].strip()
+    return full_text
 
 
 def _card_fields_for_slug(slug: str, detail_soup: BeautifulSoup) -> dict[str, str]:
@@ -141,8 +140,10 @@ def _card_fields_for_slug(slug: str, detail_soup: BeautifulSoup) -> dict[str, st
         if sci_raw:
             body = sci_raw.split(":", 1)[1].strip() if ":" in sci_raw else sci_raw
             sci_trimmed = body.split(",")[0].strip()
-        scientific = f"Scientific: {sci_trimmed}" if sci_trimmed else (
-            sci_raw or "Scientific: (not found)"
+        scientific = (
+            f"Scientific: {sci_trimmed}"
+            if sci_trimmed
+            else (sci_raw or "Scientific: (not found)")
         )
     else:
         common_line = f"Common: {common}" if common else ""
@@ -158,24 +159,24 @@ def _card_fields_for_slug(slug: str, detail_soup: BeautifulSoup) -> dict[str, st
 
 def fetch_home_species_cards(timeout: int = 45) -> list[dict[str, Any]]:
     """
-    Build six dicts: key, display_name (full), card_name, common_line, scientific,
-    profile_url, image_url.
+    Build six card dicts with:
+    key, display_name (full), card_name, common_line, scientific, profile_url, image_url.
     """
-    sess = _session()
-    r = sess.get(BIRDS_INDEX_URL, timeout=timeout)
-    r.raise_for_status()
-    index_soup = BeautifulSoup(r.text, "lxml")
+    http_session = _session()
+    index_response = http_session.get(BIRDS_INDEX_URL, timeout=timeout)
+    index_response.raise_for_status()
+    index_soup = BeautifulSoup(index_response.text, "lxml")
 
-    out: list[dict[str, Any]] = []
+    cards: list[dict[str, Any]] = []
     for slug in SLUGS_ORDERED:
         image_url, profile_url = _listing_thumbnail_and_profile(index_soup, slug)
 
-        dr = sess.get(profile_url, timeout=timeout)
-        dr.raise_for_status()
-        detail_soup = BeautifulSoup(dr.text, "lxml")
+        detail_response = http_session.get(profile_url, timeout=timeout)
+        detail_response.raise_for_status()
+        detail_soup = BeautifulSoup(detail_response.text, "lxml")
         fields = _card_fields_for_slug(slug, detail_soup)
 
-        out.append(
+        cards.append(
             {
                 "key": KEY_BY_SLUG[slug],
                 "display_name": fields["display_name"],
@@ -186,7 +187,7 @@ def fetch_home_species_cards(timeout: int = 45) -> list[dict[str, Any]]:
                 "image_url": image_url,
             }
         )
-    return out
+    return cards
 
 
 _home_species_cache: list[dict[str, Any]] | None = None
