@@ -3,7 +3,26 @@
 <head>
   <title>Run Summary</title>
   <style>
-    body { font-family: sans-serif; max-width: 840px; margin: 40px auto; padding: 0 20px; color: #1f2937; }
+    body { 
+      font-family: sans-serif; 
+      color: #1f2937;
+      background-image: url('{{ bg_pic }}');
+      background-size: cover;
+      background-attachment: fixed;
+      background-repeat: no-repeat;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    
+    .content-wrapper {
+      max-width: 840px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+    }
+    
     h1, h2, h3 { color: #2d6a4f; }
     .top-line { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
     .pill { background: #f0faf4; border: 1px solid #cfe9d8; border-radius: 8px; padding: 10px 12px; font-size: 0.95em; }
@@ -153,119 +172,122 @@
     </div>
   </div>
   {% endif %}
-  <h1>Kia'i 'Aina</h1>
-  <h2>Run Summary</h2>
+  
+  <div class="content-wrapper">
+    <h1>Kia'i 'Aina</h1>
+    <h2>Run Summary</h2>
 
-  <div class="top-line">
-    <div class="pill"><strong>Final Score:</strong> {{ score }}</div>
-    <div class="pill"><strong>Waves Completed:</strong> {{ waves_completed }}</div>
-    <div class="pill"><strong>Win Rate:</strong> {{ run_analytics.win_rate_pct }}%</div>
-    <div class="pill">
-      <strong>Best Wave:</strong> {{ run_analytics.best_wave_num }} ({{ run_analytics.best_wave_points }} pts)
-    </div>
-  </div>
-
-  <div class="box">
-    <h3>Run Analytics</h3>
-    <div class="grid">
-      <div class="stat-row">
-        <span class="stat-key">Waves Played</span><span class="stat-val">{{ run_analytics.total_waves }}</span>
-      </div>
-      <div class="stat-row">
-        <span class="stat-key">Wins / Losses</span><span class="stat-val">{{ run_analytics.wins }} / {{ run_analytics.losses }}</span>
-      </div>
-      <div class="stat-row">
-        <span class="stat-key">Turns Played</span><span class="stat-val">{{ run_analytics.turns_taken }}</span>
-      </div>
-      <div class="stat-row">
-        <span class="stat-key">Avg Damage / Turn</span><span class="stat-val">{{ run_analytics.avg_damage_per_turn }}</span>
-      </div>
-      <div class="stat-row">
-        <span class="stat-key">Avg Energy / Turn</span><span class="stat-val">{{ run_analytics.avg_energy_per_turn }}</span>
-      </div>
-      <div class="stat-row">
-        <span class="stat-key">Team Survival</span><span class="stat-val">{{ run_analytics.team_survival_pct }}%</span>
-      </div>
-      <div class="stat-row">
-        <span class="stat-key">Total Damage Dealt</span><span class="stat-val">{{ run_analytics.total_damage_dealt }}</span>
-      </div>
-      <div class="stat-row">
-        <span class="stat-key">Total Damage Taken</span><span class="stat-val">{{ run_analytics.total_damage_taken }}</span>
-      </div>
-      <div class="stat-row">
-        <span class="stat-key">Maximum Damage Dealt</span><span class="stat-val">{{ run_analytics.max_damage_dealt }}</span>
-      </div>
-      <div class="stat-row">
-        <span class="stat-key">Maximum Damage Received</span><span class="stat-val">{{ run_analytics.max_damage_received }}</span>
-      </div>
-      <div class="stat-row">
-        <span class="stat-key">Invaders Defeated</span><span class="stat-val">{{ run_analytics.total_invaders_defeated }}</span>
-      </div>
-      <div class="stat-row">
-        <span class="stat-key">Defenders Fainted</span><span class="stat-val">{{ run_analytics.total_defenders_fainted }}</span>
-      </div>
-      <div class="stat-row">
-        <span class="stat-key">Most Used Move</span><span class="stat-val">{{ run_analytics.top_move_name }}</span>
-      </div>
-      <div class="stat-row">
-        <span class="stat-key">Most Used Defender</span><span class="stat-val">{{ run_analytics.top_defender_name }}</span>
+    <div class="top-line">
+      <div class="pill"><strong>Final Score:</strong> {{ score }}</div>
+      <div class="pill"><strong>Waves Completed:</strong> {{ waves_completed }}</div>
+      <div class="pill"><strong>Win Rate:</strong> {{ run_analytics.win_rate_pct }}%</div>
+      <div class="pill">
+        <strong>Best Wave:</strong> {{ run_analytics.best_wave_num }} ({{ run_analytics.best_wave_points }} pts)
       </div>
     </div>
-  </div>
 
-  <div class="box">
-    <h3>Run Performance Graph</h3>
-    <div class="chart-wrap">
-      {% if chart_ready %}
-      <img
-        src="{{ chart_image_url }}"
-        alt="Run chart showing points and damage trends"
-      >
-      {% else %}
-      <p class="chart-note">Chart unavailable. Install `pandas` and `matplotlib` to enable graph rendering.</p>
+    <div class="box">
+      <h3>Run Analytics</h3>
+      <div class="grid">
+        <div class="stat-row">
+          <span class="stat-key">Waves Played</span><span class="stat-val">{{ run_analytics.total_waves }}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-key">Wins / Losses</span><span class="stat-val">{{ run_analytics.wins }} / {{ run_analytics.losses }}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-key">Turns Played</span><span class="stat-val">{{ run_analytics.turns_taken }}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-key">Avg Damage / Turn</span><span class="stat-val">{{ run_analytics.avg_damage_per_turn }}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-key">Avg Energy / Turn</span><span class="stat-val">{{ run_analytics.avg_energy_per_turn }}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-key">Team Survival</span><span class="stat-val">{{ run_analytics.team_survival_pct }}%</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-key">Total Damage Dealt</span><span class="stat-val">{{ run_analytics.total_damage_dealt }}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-key">Total Damage Taken</span><span class="stat-val">{{ run_analytics.total_damage_taken }}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-key">Maximum Damage Dealt</span><span class="stat-val">{{ run_analytics.max_damage_dealt }}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-key">Maximum Damage Received</span><span class="stat-val">{{ run_analytics.max_damage_received }}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-key">Invaders Defeated</span><span class="stat-val">{{ run_analytics.total_invaders_defeated }}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-key">Defenders Fainted</span><span class="stat-val">{{ run_analytics.total_defenders_fainted }}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-key">Most Used Move</span><span class="stat-val">{{ run_analytics.top_move_name }}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-key">Most Used Defender</span><span class="stat-val">{{ run_analytics.top_defender_name }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="box">
+      <h3>Run Performance Graph</h3>
+      <div class="chart-wrap">
+        {% if chart_ready %}
+        <img
+          src="{{ chart_image_url }}"
+          alt="Run chart showing points and damage trends"
+        >
+        {% else %}
+        <p class="chart-note">Chart unavailable. Install `pandas` and `matplotlib` to enable graph rendering.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="box">
+      <h3>Per-Wave Breakdown</h3>
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>Wave</th>
+            <th>Outcome</th>
+            <th>Most Used Defender</th>
+            <th>Points</th>
+            <th>Turns</th>
+            <th>Dmg Dealt</th>
+            <th>Dmg Taken</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for wave in run_history %}
+          <tr>
+            <td>{{ wave.wave_num }}</td>
+            <td>
+              <span class="tag {% if wave.player_won %}win{% else %}loss{% endif %}">
+                {% if wave.player_won %}WIN{% else %}LOSS{% endif %}
+              </span>
+            </td>
+            <td>{{ wave.most_used_defender }}</td>
+            <td>{{ wave.points }}</td>
+            <td>{{ wave.turns_taken }}</td>
+            <td>{{ wave.damage_dealt }}</td>
+            <td>{{ wave.damage_taken }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="actions">
+      <a class="btn" href="/">Play Again</a>
+      {% if difficulty == 'infinite' %}
+      <a class="btn infinite" href="/leaderboard">View Leaderboard</a>
       {% endif %}
     </div>
-  </div>
-
-  <div class="box">
-    <h3>Per-Wave Breakdown</h3>
-    <table class="history-table">
-      <thead>
-        <tr>
-          <th>Wave</th>
-          <th>Outcome</th>
-          <th>Most Used Defender</th>
-          <th>Points</th>
-          <th>Turns</th>
-          <th>Dmg Dealt</th>
-          <th>Dmg Taken</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for wave in run_history %}
-        <tr>
-          <td>{{ wave.wave_num }}</td>
-          <td>
-            <span class="tag {% if wave.player_won %}win{% else %}loss{% endif %}">
-              {% if wave.player_won %}WIN{% else %}LOSS{% endif %}
-            </span>
-          </td>
-          <td>{{ wave.most_used_defender }}</td>
-          <td>{{ wave.points }}</td>
-          <td>{{ wave.turns_taken }}</td>
-          <td>{{ wave.damage_dealt }}</td>
-          <td>{{ wave.damage_taken }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-
-  <div class="actions">
-    <a class="btn" href="/">Play Again</a>
-    {% if difficulty == 'infinite' %}
-    <a class="btn infinite" href="/leaderboard">View Leaderboard</a>
-    {% endif %}
   </div>
   
   <script>

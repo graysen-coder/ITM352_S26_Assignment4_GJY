@@ -157,47 +157,82 @@ def _card_fields_for_slug(slug: str, detail_soup: BeautifulSoup) -> dict[str, st
     }
 
 
+def _fallback_cards() -> list[dict[str, Any]]:
+    """Return minimal fallback data when scraping fails."""
+    fallback_data = {
+        "nene": {"display_name": "Nēnē", "card_name": "Nēnē", "scientific": "Scientific: (unavailable)"},
+        "iiwi": {"display_name": "ʻIʻiwi", "card_name": "ʻIʻiwi", "scientific": "Scientific: (unavailable)"},
+        "io": {"display_name": "ʻIo", "card_name": "ʻIo", "scientific": "Scientific: (unavailable)"},
+        "pueo": {"display_name": "Pueo", "card_name": "Pueo", "scientific": "Scientific: (unavailable)"},
+        "uau": {"display_name": "ʻUaʻu", "card_name": "ʻUaʻu", "scientific": "Scientific: (unavailable)"},
+        "alala": {"display_name": "ʻAlala", "card_name": "ʻAlala", "scientific": "Scientific: (unavailable)"},
+    }
+    cards = []
+    for slug in SLUGS_ORDERED:
+        data = fallback_data.get(slug, {})
+        cards.append({
+            "key": KEY_BY_SLUG[slug],
+            "display_name": data.get("display_name", slug),
+            "card_name": data.get("card_name", slug),
+            "common_line": "",
+            "scientific": data.get("scientific", ""),
+            "profile_url": "",
+            "image_url": "",
+        })
+    return cards
+
+
 def fetch_home_species_cards(timeout: int = 45) -> list[dict[str, Any]]:
     """
     Build six card dicts with:
     key, display_name (full), card_name, common_line, scientific, profile_url, image_url.
+    Returns fallback data if scraping fails.
     """
-    http_session = _session()
-    index_response = http_session.get(BIRDS_INDEX_URL, timeout=timeout)
-    index_response.raise_for_status()
-    index_soup = BeautifulSoup(index_response.text, "lxml")
+    try:
+        http_session = _session()
+        index_response = http_session.get(BIRDS_INDEX_URL, timeout=timeout)
+        index_response.raise_for_status()
+        index_soup = BeautifulSoup(index_response.text, "lxml")
 
-    cards: list[dict[str, Any]] = []
-    for slug in SLUGS_ORDERED:
-        image_url, profile_url = _listing_thumbnail_and_profile(index_soup, slug)
+        cards: list[dict[str, Any]] = []
+        for slug in SLUGS_ORDERED:
+            image_url, profile_url = _listing_thumbnail_and_profile(index_soup, slug)
 
-        detail_response = http_session.get(profile_url, timeout=timeout)
-        detail_response.raise_for_status()
-        detail_soup = BeautifulSoup(detail_response.text, "lxml")
-        fields = _card_fields_for_slug(slug, detail_soup)
+            detail_response = http_session.get(profile_url, timeout=timeout)
+            detail_response.raise_for_status()
+            detail_soup = BeautifulSoup(detail_response.text, "lxml")
+            fields = _card_fields_for_slug(slug, detail_soup)
 
-        cards.append(
-            {
-                "key": KEY_BY_SLUG[slug],
-                "display_name": fields["display_name"],
-                "card_name": fields["card_name"],
-                "common_line": fields["common_line"],
-                "scientific": fields["scientific"],
-                "profile_url": profile_url,
-                "image_url": image_url,
-            }
-        )
-    return cards
+            cards.append(
+                {
+                    "key": KEY_BY_SLUG[slug],
+                    "display_name": fields["display_name"],
+                    "card_name": fields["card_name"],
+                    "common_line": fields["common_line"],
+                    "scientific": fields["scientific"],
+                    "profile_url": profile_url,
+                    "image_url": image_url,
+                }
+            )
+        return cards
+    except (requests.RequestException, requests.Timeout, Exception) as e:
+        print(f"⚠ Warning: Failed to fetch DLNR bird data: {e}")
+        print("  Using fallback data. Bird images and external links will not be available.")
+        return _fallback_cards()
 
 
 _home_species_cache: list[dict[str, Any]] | None = None
 
 
 def get_home_species_cards(refresh: bool = False) -> list[dict[str, Any]]:
-    """Cached scrape (one fetch per process unless refresh=True)."""
+    """Cached scrape (one fetch per process unless refresh=True). Returns fallback if scraping fails."""
     global _home_species_cache
     if _home_species_cache is None or refresh:
-        _home_species_cache = fetch_home_species_cards()
+        try:
+            _home_species_cache = fetch_home_species_cards()
+        except Exception as e:
+            print(f"✗ Error in get_home_species_cards: {e}")
+            _home_species_cache = _fallback_cards()
     return _home_species_cache
 
 
@@ -206,15 +241,29 @@ DEFENDER_NATIVE_NAMES_ORDERED: list[str] = list(SLUGS_ORDERED)
 
 
 def get_dlnr_meta_by_native_name(refresh: bool = False) -> dict[str, dict[str, Any]]:
-    """Map defenders.json ``name`` -> display fields for defender cards."""
-    cards = get_home_species_cards(refresh=refresh)
-    return {
-        slug: {
-            "display_name": c["card_name"],
-            "common_line": c.get("common_line", ""),
-            "image_url": c["image_url"],
-            "profile_url": c["profile_url"],
-            "scientific": c["scientific"],
+    """Map defenders.json ``name`` -> display fields for defender cards. Returns fallback if scraping fails."""
+    try:
+        cards = get_home_species_cards(refresh=refresh)
+        return {
+            slug: {
+                "display_name": c["card_name"],
+                "common_line": c.get("common_line", ""),
+                "image_url": c["image_url"],
+                "profile_url": c["profile_url"],
+                "scientific": c["scientific"],
+            }
+            for slug, c in zip(SLUGS_ORDERED, cards)
         }
-        for slug, c in zip(SLUGS_ORDERED, cards)
-    }
+    except Exception as e:
+        print(f"✗ Error in get_dlnr_meta_by_native_name: {e}")
+        # Return minimal fallback data
+        return {
+            slug: {
+                "display_name": slug.title(),
+                "common_line": "",
+                "image_url": "",
+                "profile_url": "",
+                "scientific": "",
+            }
+            for slug in SLUGS_ORDERED
+        }

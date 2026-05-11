@@ -294,6 +294,8 @@ def choose_home():
 
 @app.route("/game")
 def game():
+    background_image = url_for("static", filename="background.png")
+
     if "wave_num" not in session:
         return redirect(url_for("home"))
 
@@ -320,12 +322,15 @@ def game():
             }
         )
 
+
     return render_template(
         "game.html",
         wave_num=session["wave_num"],
         score=session["score"],
         natives=natives_data,
         team_size=TEAM_SIZE,
+        bg_pic=background_image,
+
     )
 
 
@@ -348,6 +353,8 @@ def battle_start():
 
 @app.route("/battle")
 def battle():
+    background_image = url_for("static", filename="background.png")
+    
     if "battle" not in session:
         return redirect(url_for("home"))
 
@@ -383,11 +390,15 @@ def battle():
         inv=inv,
         inv_card=inv_card,
         score=session["score"],
+        bg_pic=background_image,
     )
 
 
 @app.route("/battle/action", methods=["POST"])
 def battle_action():
+
+    background_image = url_for("static", filename="background.png")
+
     if "battle" not in session:
         return redirect(url_for("home"))
 
@@ -458,11 +469,14 @@ def battle_action():
 
         return redirect(url_for("result"))
 
-    return redirect(url_for("battle"))
+    return redirect(url_for("battle", bg_pic=background_image))
 
 
 @app.route("/result")
 def result():
+
+    background_image = url_for("static", filename="background.png")
+
     if "battle" not in session:
         return redirect(url_for("home"))
 
@@ -538,6 +552,7 @@ def result():
         game_over=session.get("game_over", False),
         facts=facts_view,
         analytics=analytics_view,
+        bg_pic=background_image,
     )
 
 
@@ -599,6 +614,7 @@ def end():
         "best_wave_points": best_wave.get("points", 0) if best_wave else 0,
     }
 
+    background_image = url_for("static", filename="background.png")
     return render_template(
         "end.html",
         score=session.get("score", 0),
@@ -609,6 +625,7 @@ def end():
         chart_ready=chart_ready,
         chart_image_url=f"{url_for('static', filename='run_summary_chart.png')}?v={session.get('score', 0)}-{total_waves}",
         difficulty=session.get("difficulty", "normal"),
+        bg_pic=background_image,
     )
 
 
