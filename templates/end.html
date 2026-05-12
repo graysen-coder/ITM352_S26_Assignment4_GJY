@@ -2,6 +2,7 @@
 <html>
 <head>
   <title>Run Summary</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='kiai-readability.css') }}">
   <style>
     body { 
       font-family: sans-serif; 
@@ -20,10 +21,14 @@
       background: rgba(255, 255, 255, 0.95);
       padding: 30px;
       border-radius: 12px;
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+      box-shadow: var(--kiai-shadow-card);
+    }
+
+    .content-wrapper.page-title-overlap {
+      margin-top: calc((-1024 / 1536) * 0.25 * min(520px, 100vw - 48px) - 25px);
     }
     
-    h1, h2, h3 { color: #2d6a4f; }
+    h2, h3 { color: #2d6a4f; }
     .top-line { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
     .pill { background: #f0faf4; border: 1px solid #cfe9d8; border-radius: 8px; padding: 10px 12px; font-size: 0.95em; }
     .box { background: #f8fafc; border-left: 4px solid #2d6a4f; padding: 12px 16px; margin: 16px 0 24px; }
@@ -40,16 +45,27 @@
       background: #fff;
     }
     .chart-note { color: #6b7280; font-size: 0.85em; margin-top: 8px; }
+    .lb-panel {
+      background: #faf5ff;
+      border: 1px solid #e9d5ff;
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin-bottom: 18px;
+    }
+    .lb-panel h4 { margin: 0 0 10px; color: #6b21a8; font-size: 1.05em; }
+    .lb-panel .lb-note { color: #6b7280; font-size: 0.88em; margin-top: 10px; }
+    .lb-panel .lb-big { font-size: 1.2em; line-height: 1.45; margin: 0 0 12px; color: #374151; }
+    .lb-panel .lb-line { margin: 8px 0 0; color: #4b5563; font-size: 0.98em; line-height: 1.45; }
     .history-table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
     .history-table th, .history-table td { text-align: left; padding: 8px 6px; border-bottom: 1px solid #e5e7eb; }
     .tag { display: inline-block; border-radius: 999px; padding: 2px 8px; font-size: 0.78em; font-weight: 700; }
     .tag.win { background: #d1fae5; color: #065f46; }
     .tag.loss { background: #fee2e2; color: #991b1b; }
     .actions { margin-top: 22px; }
-    .btn { background: #2d6a4f; color: white; text-decoration: none; border: none; padding: 11px 18px; border-radius: 6px; display: inline-block; cursor: pointer; }
-    .btn:hover { background: #1b4332; }
-    .btn.infinite { background: #a855f7; }
-    .btn.infinite:hover { background: #7e22ce; }
+    .btn { background: #2d6a4f; color: white; text-decoration: none; border: none; padding: 11px 18px; border-radius: 6px; display: inline-block; cursor: pointer; box-shadow: var(--kiai-shadow-btn); }
+    .btn:hover { background: #1b4332; box-shadow: var(--kiai-shadow-btn-hover); }
+    .btn.infinite { background: #a855f7; box-shadow: var(--kiai-shadow-btn); }
+    .btn.infinite:hover { background: #7e22ce; box-shadow: var(--kiai-shadow-btn-hover); }
     
     /* Modal styles */
     .modal {
@@ -75,7 +91,7 @@
       border-radius: 8px;
       max-width: 500px;
       width: 90%;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      box-shadow: var(--kiai-shadow-card);
     }
     
     .modal-header {
@@ -173,8 +189,10 @@
   </div>
   {% endif %}
   
-  <div class="content-wrapper">
-    <h1>Kia'i 'Aina</h1>
+  <div class="page-title-wrap">
+    <img src="{{ url_for('static', filename='title.png') }}" alt="Kia'i 'Aina">
+  </div>
+  <div class="content-wrapper page-title-overlap">
     <h2>Run Summary</h2>
 
     <div class="top-line">
@@ -236,11 +254,41 @@
 
     <div class="box">
       <h3>Run Performance Graph</h3>
+      {% if leaderboard_stats %}
+      <div class="lb-panel">
+        <h4>How did you do?</h4>
+        {% if leaderboard_stats.percentile_beaten is not none %}
+        <p class="lb-big">You scored higher than <strong>{{ leaderboard_stats.percentile_beaten }}%</strong> of all saved scores!</p>
+        {% endif %}
+        {% if leaderboard_stats.mean_score is not none and leaderboard_stats.leaderboard_count %}
+        <p class="lb-line">Most saved scores are around <strong>{{ leaderboard_stats.mean_score }}</strong> points. (We compared you to <strong>{{ leaderboard_stats.leaderboard_count }}</strong> saved score{% if leaderboard_stats.leaderboard_count != 1 %}s{% endif %}.)</p>
+        {% endif %}
+        {% if leaderboard_stats.z_score is not none %}
+          {% set z = leaderboard_stats.z_score %}
+          <p class="lb-line">
+          {% if z >= 1.5 %}
+            <strong>Wow!</strong> Your score is way above most people!!! You're a Hoopapa (champion)!
+          {% elif z >= 0.5 %}
+            <strong>Nice!</strong> Your score is above most people save. You're almost at the top!
+          {% elif z > -0.5 %}
+            Your score is pretty... average. Try again? Maybe you'll get a higher score next time!
+          {% elif z > -1.5 %}
+            Your score is a little below most people — keep playing! Almost there!
+          {% else %}
+            Your score is below most people... — you'll get 'em next time! Bad rolls happen to everyone!
+          {% endif %}
+          </p>
+        {% endif %}
+        {% if leaderboard_stats.note %}
+        <p class="lb-note">{{ leaderboard_stats.note }}</p>
+        {% endif %}
+      </div>
+      {% endif %}
       <div class="chart-wrap">
         {% if chart_ready %}
         <img
           src="{{ chart_image_url }}"
-          alt="Run chart showing points and damage trends"
+          alt="Line chart: damage dealt and damage taken by wave"
         >
         {% else %}
         <p class="chart-note">Chart unavailable. Install `pandas` and `matplotlib` to enable graph rendering.</p>

@@ -2,15 +2,54 @@
 <html>
 <head>
   <title>Wave {{ wave_num }} — Choose Your Team</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='kiai-readability.css') }}">
   <style>
     body { font-family: sans-serif; max-width: 1200px; margin: 40px auto; padding: 0 20px; background-image: url('/static/battle_background.png'); background-size: cover; background-attachment: fixed; background-repeat: no-repeat; }
-    h1, h2 { color: white; text-shadow: 1px 1px 4px rgba(0,0,0,0.8); }
-    p { color: white; text-shadow: 1px 1px 3px rgba(0,0,0,0.7); }
-    .species-grid { display: flex; flex-wrap: wrap; gap: 16px; margin: 20px 0; }
+    h2 { color: white; text-shadow: var(--kiai-text-on-bg-lg); }
+    p { color: white; text-shadow: var(--kiai-text-on-bg); }
+    .species-grid { display: flex; flex-wrap: wrap; gap: 16px; margin: 20px 0; justify-content: center; }
+    .game-page-main {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
+    .game-page-main > .score-bar,
+    .game-page-main > h2,
+    .game-page-main > p {
+      width: 100%;
+      text-align: center;
+    }
+    .game-page-main form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
+    .team-picker {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      width: fit-content;
+      max-width: 100%;
+      margin: 0 auto;
+    }
+    .team-picker .species-grid {
+      justify-content: flex-start;
+      max-width: 100%;
+    }
+    .game-page-main form .btn {
+      padding: 16px 44px;
+      font-size: 1.2em;
+      border-radius: 8px;
+      margin-top: 20px;
+    }
     .species-card {
       border: 2px solid #ccc; border-radius: 8px; padding: 16px; width: 275px;
-      cursor: pointer; transition: border-color 0.2s; background: white;
+      cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s; background: white;
+      box-shadow: var(--kiai-shadow-card);
     }
+    .species-card:hover { box-shadow: var(--kiai-shadow-card-hover); transform: translateY(-2px); }
     .species-card:has(input:checked) { border-color: #2d6a4f; background: #f0faf4; }
     .species-card input { margin-right: 8px; }
     .species-name {
@@ -43,18 +82,23 @@
     .btn {
       background: #2d6a4f; color: white; border: none; padding: 12px 28px;
       font-size: 1em; border-radius: 6px; cursor: pointer; margin-top: 16px;
+      box-shadow: var(--kiai-shadow-btn);
     }
-    .btn:hover { background: #1b4332; }
-    .score-bar { color: white; text-shadow: 1px 1px 3px rgba(0,0,0,0.7); margin-bottom: 8px; }
+    .btn:hover { background: #1b4332; box-shadow: var(--kiai-shadow-btn-hover); }
+    .score-bar { color: white; text-shadow: var(--kiai-text-on-bg); margin-bottom: 8px; }
   </style>
 </head>
 <body>
-  <h1>Kia'i 'Aina</h1>
-  <div class="score-bar">Wave {{ wave_num }} &nbsp;|&nbsp; Score: {{ score }}</div>
+  <div class="page-title-wrap">
+    <img src="{{ url_for('static', filename='title.png') }}" alt="Kia'i 'Aina">
+  </div>
+  <div class="game-page-main">
+  <div class="score-bar page-title-overlap">Wave {{ wave_num }} &nbsp;|&nbsp; Score: {{ score }}</div>
   <h2>Choose {{ team_size }} Defenders</h2>
-  <p>Pick up to {{ team_size }} native species for this wave. Names and photos come from the DLNR Native Birds profiles. Consider HP, moves, and typings.</p>
+  <p>Pick up to {{ team_size }} native birds for this wave. Consider HP, moves, and strengths & weaknesses.</p>
 
   <form action="/battle/start" method="post">
+    <div class="team-picker">
     <div class="species-grid">
       {% for s in natives %}
       <label class="species-card">
@@ -93,7 +137,9 @@
       {% endfor %}
     </div>
     <button class="btn" type="submit">Go to Battle</button>
+    </div>
   </form>
+  </div>
 
   <script>
     const MAX = {{ team_size }};

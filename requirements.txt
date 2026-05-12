@@ -6,5 +6,4 @@ matplotlib
 pandas
 python-dotenv
 requests
-seaborn
 sendgrid

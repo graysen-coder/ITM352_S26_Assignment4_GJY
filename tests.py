@@ -13,7 +13,6 @@ from game_logic import (
     DIFFICULTY_SETTINGS,
     generate_wave,
     init_battle,
-    load_invaders,
     load_species,
     process_turn,
     score_for_wave,
