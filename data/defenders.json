@@ -6,16 +6,16 @@
     "resistance": { "default": 1.0 },
     "is_invasive": false,
     "habitats": ["grassland", "dry_lowland", "volcanic_shrubland"],
-    "weak_to": ["Placeholder weakness"],
-    "strong_against": ["Placeholder strength"],
+    "weak_to": ["Mongoose", "Little Fire Ant"],
+    "strong_against": ["Coqui Frog", "Naio Thrips"],
     "facts": [
       "The nēnē is Hawaii's state bird.",
       "Nearly went extinct in the 1950s."
     ],
     "moves": [
-      { "name": "Nene Move 1", "damage": 14, "energy_cost": 1, "description": "Placeholder description." },
-      { "name": "Nene Move 2", "damage": 30, "energy_cost": 3, "description": "Placeholder description." },
-      { "name": "Nene Move 3", "damage": 52, "energy_cost": 5, "description": "Placeholder description." }
+      { "name": "Peck", "damage": 14, "energy_cost": 1, "description": "Placeholder description." },
+      { "name": "Wing Strike", "damage": 30, "energy_cost": 3, "description": "Placeholder description." },
+      { "name": "Nene's Charge", "damage": 52, "energy_cost": 5, "description": "Placeholder description." }
     ]
   },
   {
@@ -25,15 +25,15 @@
     "resistance": { "default": 1.0 },
     "is_invasive": false,
     "habitats": ["wet_forest", "montane_forest"],
-    "weak_to": ["Placeholder weakness"],
-    "strong_against": ["Placeholder strength"],
+    "weak_to": ["Brown Tree Snake", "Little Fire Ant"],
+    "strong_against": ["Naio Thrips", "Coqui Frog"],
     "facts": [
       "Scarlet honeycreeper; its curved bill matches native flowers."
     ],
     "moves": [
-      { "name": "Iiwi Move 1", "damage": 11, "energy_cost": 1, "description": "Placeholder description." },
-      { "name": "Iiwi Move 2", "damage": 24, "energy_cost": 3, "description": "Placeholder description." },
-      { "name": "Iiwi Move 3", "damage": 46, "energy_cost": 5, "description": "Placeholder description." }
+      { "name": "Bill Stab", "damage": 11, "energy_cost": 1, "description": "Placeholder description." },
+      { "name": "Nectar Dive", "damage": 24, "energy_cost": 3, "description": "Placeholder description." },
+      { "name": "Crimson Flurry", "damage": 46, "energy_cost": 5, "description": "Placeholder description." }
     ]
   },
   {
@@ -43,15 +43,15 @@
     "resistance": { "default": 1.0 },
     "is_invasive": false,
     "habitats": ["open_forest", "dry_forest", "grassland", "montane_forest"],
-    "weak_to": ["Placeholder weakness"],
-    "strong_against": ["Placeholder strength"],
+    "weak_to": ["Little Fire Ant", "Coconut Rhinoceros Beetle"],
+    "strong_against": ["Mongoose", "Brown Tree Snake"],
     "facts": [
       "ʻIo is the Hawaiian hawk (Buteo solitarius), endemic to Hawaiʻi."
     ],
     "moves": [
-      { "name": "Io Move 1", "damage": 15, "energy_cost": 1, "description": "Placeholder description." },
-      { "name": "Io Move 2", "damage": 34, "energy_cost": 3, "description": "Placeholder description." },
-      { "name": "Io Move 3", "damage": 58, "energy_cost": 5, "description": "Placeholder description." }
+      { "name": "Talon Strike", "damage": 15, "energy_cost": 1, "description": "Placeholder description." },
+      { "name": "Hawk Dive", "damage": 34, "energy_cost": 3, "description": "Placeholder description." },
+      { "name": "Sky Fury", "damage": 58, "energy_cost": 5, "description": "Placeholder description." }
     ]
   },
   {
@@ -61,15 +61,15 @@
     "resistance": { "default": 1.0 },
     "is_invasive": false,
     "habitats": ["grassland", "shrubland", "open_forest"],
-    "weak_to": ["Placeholder weakness"],
-    "strong_against": ["Placeholder strength"],
+    "weak_to": ["Brown Tree Snake", "Little Fire Ant"],
+    "strong_against": ["Mongoose", "Coqui Frog"],
     "facts": [
       "The pueo is a Hawaiian short-eared owl (Asio flammeus sandwichensis)."
     ],
     "moves": [
-      { "name": "Pueo Move 1", "damage": 16, "energy_cost": 1, "description": "Placeholder description." },
-      { "name": "Pueo Move 2", "damage": 36, "energy_cost": 3, "description": "Placeholder description." },
-      { "name": "Pueo Move 3", "damage": 65, "energy_cost": 5, "description": "Placeholder description." }
+      { "name": "Owl Strike", "damage": 16, "energy_cost": 1, "description": "Placeholder description." },
+      { "name": "Night Swoop", "damage": 36, "energy_cost": 3, "description": "Placeholder description." },
+      { "name": "Spirit Dive", "damage": 65, "energy_cost": 5, "description": "Placeholder description." }
     ]
   },
   {
@@ -79,15 +79,15 @@
     "resistance": { "default": 1.0 },
     "is_invasive": false,
     "habitats": ["coastal", "marine", "dry_lowland"],
-    "weak_to": ["Placeholder weakness"],
-    "strong_against": ["Placeholder strength"],
+    "weak_to": ["Mongoose", "Little Fire Ant"],
+    "strong_against": ["Coqui Frog", "Naio Thrips"],
     "facts": [
       "ʻUaʻu is the endangered Hawaiian petrel (Pterodroma sandwichensis)."
     ],
     "moves": [
-      { "name": "Uau Move 1", "damage": 12, "energy_cost": 1, "description": "Placeholder description." },
-      { "name": "Uau Move 2", "damage": 28, "energy_cost": 3, "description": "Placeholder description." },
-      { "name": "Uau Move 3", "damage": 48, "energy_cost": 5, "description": "Placeholder description." }
+      { "name": "Sea Strike", "damage": 12, "energy_cost": 1, "description": "Placeholder description." },
+      { "name": "Storm Dive", "damage": 28, "energy_cost": 3, "description": "Placeholder description." },
+      { "name": "Ocean Gale", "damage": 48, "energy_cost": 5, "description": "Placeholder description." }
     ]
   },
   {
@@ -97,15 +97,15 @@
     "resistance": { "default": 1.0 },
     "is_invasive": false,
     "habitats": ["wet_forest", "dry_forest", "montane_forest", "open_forest"],
-    "weak_to": ["Placeholder weakness"],
-    "strong_against": ["Placeholder strength"],
+    "weak_to": ["Mongoose", "Brown Tree Snake"],
+    "strong_against": ["Coconut Rhinoceros Beetle", "Coqui Frog"],
     "facts": [
       "ʻAlalā is the Hawaiian crow (Corvus hawaiiensis); extinct in the wild, recovery efforts ongoing."
     ],
     "moves": [
-      { "name": "Alala Move 1", "damage": 13, "energy_cost": 1, "description": "Placeholder description." },
-      { "name": "Alala Move 2", "damage": 30, "energy_cost": 3, "description": "Placeholder description." },
-      { "name": "Alala Move 3", "damage": 52, "energy_cost": 5, "description": "Placeholder description." }
+      { "name": "Crow Peck", "damage": 13, "energy_cost": 1, "description": "Placeholder description." },
+      { "name": "Dive Bomb", "damage": 30, "energy_cost": 3, "description": "Placeholder description." },
+      { "name": "Crow Fury", "damage": 52, "energy_cost": 5, "description": "Placeholder description." }
     ]
   }
 ]

@@ -301,7 +301,7 @@
         
         <div class="header">
             <h1>🌴 Species Compendium 🌴</h1>
-            <p class="header-subtitle">Learn about the native defenders and invasive species of Hawaiʻi</p>
+            <p class="header-subtitle">Learn about the endangered native birds and invasive species of Hawaiʻi</p>
         </div>
         
         <!-- Defenders Section -->
@@ -338,7 +338,7 @@
                                 
                                 {% if defender.facts %}
                                     <div class="card-facts">
-                                        <div class="facts-title">Facts</div>
+                                        <div class="facts-title">Description</div>
                                         <ul class="facts-list">
                                             {% for fact in defender.facts[:3] %}
                                                 <li>{{ fact }}</li>
@@ -398,7 +398,7 @@
                                     </div>
                                 {% elif invader.facts %}
                                     <div class="card-facts">
-                                        <div class="facts-title">Facts</div>
+                                        <div class="facts-title">Description</div>
                                         <ul class="facts-list">
                                             {% for fact in invader.facts[:3] %}
                                                 <li>{{ fact }}</li>

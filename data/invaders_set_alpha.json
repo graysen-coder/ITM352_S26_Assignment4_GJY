@@ -8,10 +8,10 @@
     },
     "is_invasive": true,
     "weak_to": [
-      "Placeholder weakness"
+      "Pueo", "Alala"
     ],
     "strong_against": [
-      "Placeholder strength"
+      "Uau", "Nene"
     ],
     "facts": [
       "Coqui (Eleutherodactylus coqui) — https://dlnr.hawaii.gov/hisc/coqui-frog/"
@@ -55,10 +55,10 @@
     },
     "is_invasive": true,
     "weak_to": [
-      "Placeholder weakness"
+      "Alala", "Io"
     ],
     "strong_against": [
-      "Placeholder strength"
+      "Iiwi", "Uau"
     ],
     "facts": [
       "Coconut Rhinoceros Beetle (Oryctes rhinoceros) — https://dlnr.hawaii.gov/hisc/info/invasive-species-profiles/coconut-rhinoceros-beetle/"
@@ -97,10 +97,10 @@
     },
     "is_invasive": true,
     "weak_to": [
-      "Placeholder weakness"
+      "Io", "Nene"
     ],
     "strong_against": [
-      "Placeholder strength"
+      "Iiwi", "Alala"
     ],
     "facts": [
       "Brown Tree Snake (Boiga irregularis) — https://dlnr.hawaii.gov/hisc/info/species/brown-tree-snake/"
@@ -138,10 +138,10 @@
     },
     "is_invasive": true,
     "weak_to": [
-      "Placeholder weakness"
+      "Nene", "Alala"
     ],
     "strong_against": [
-      "Placeholder strength"
+      "Iiwi", "Uau"
     ],
     "facts": [
       "Little Fire Ant (Wasmannia auropunctata) — https://dlnr.hawaii.gov/hisc/little-fire-ant-lfa/"
@@ -185,10 +185,10 @@
     },
     "is_invasive": true,
     "weak_to": [
-      "Placeholder weakness"
+      "Iiwi", "Nene"
     ],
     "strong_against": [
-      "Placeholder strength"
+      "Io", "Pueo"
     ],
     "facts": [
       "Naio Thrips (Klambothrips myopori) — https://dlnr.hawaii.gov/hisc/info/species/naio-thrips/"
@@ -222,10 +222,10 @@
     },
     "is_invasive": true,
     "weak_to": [
-      "Placeholder weakness"
+      "Io", "Pueo"
     ],
     "strong_against": [
-      "Placeholder strength"
+      "Nene", "Uau"
     ],
     "facts": [
       "Mongoose (Herpestes javanicus) — https://dlnr.hawaii.gov/hisc/mongoose-urva-auropunctata/"

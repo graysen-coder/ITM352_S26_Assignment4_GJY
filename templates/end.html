@@ -153,17 +153,17 @@
   <div id="scoreModal" class="modal show">
     <div class="modal-content">
       <div class="modal-header">🏆 You Made the Leaderboard! 🏆</div>
-      <p style="text-align: center; color: #666; margin-bottom: 20px;">Enter your name and email to save your score!</p>
+      <p style="text-align: center; color: #666; margin-bottom: 20px;">Enter your name to save your score!</p>
       <form id="scoreForm">
         <div class="form-group">
           <label for="playerName">Player Name:</label>
           <input type="text" id="playerName" name="playerName" placeholder="Enter your name" required maxlength="50">
         </div>
         <div class="form-group">
-          <label for="playerEmail">Email Address:</label>
-          <input type="email" id="playerEmail" name="playerEmail" placeholder="your.email@example.com" required maxlength="100">
+          <label for="playerEmail">Email Address: <span style="font-size: 0.85em; color: #9ca3af;">(optional)</span></label>
+          <input type="email" id="playerEmail" name="playerEmail" placeholder="your.email@example.com" maxlength="100">
         </div>
-        <p style="font-size: 0.85em; color: #6b7280; margin-bottom: 15px;">💌 We'll email you when your score is beaten!</p>
+        <p style="font-size: 0.85em; color: #6b7280; margin-bottom: 15px;">💌 Provide your email and we'll notify you when your score is beaten!</p>
         <div class="modal-actions">
           <button type="submit" class="modal-btn save">Save Score</button>
           <button type="button" class="modal-btn skip" onclick="skipScoreSave()">Skip</button>

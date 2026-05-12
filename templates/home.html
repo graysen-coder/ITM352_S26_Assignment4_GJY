@@ -93,11 +93,7 @@
             background: linear-gradient(180deg, #3b82f6, #1e40af);
         }
         
-        .difficulty-btn {
-            background: linear-gradient(180deg, #a855f7, #7e22ce);
-        }
-        
-        .leaderboard-btn {
+.leaderboard-btn {
             background: linear-gradient(180deg, #f59e0b, #d97706);
         }
         
@@ -117,16 +113,10 @@
         </div>
         
         <div class="menu-container">
-            <form action="/start" method="post">
-                <button type="submit" class="menu-btn start-game">
+            <a href="/difficulty" style="text-decoration: none; width: 100%;">
+                <button type="button" class="menu-btn start-game" style="width: 100%;">
                     <span class="menu-btn-icon">🌿</span>
                     <span>Start Game</span>
-                </button>
-            </form>
-            <a href="/difficulty" style="text-decoration: none; width: 100%;">
-                <button type="button" class="menu-btn difficulty-btn" style="width: 100%;">
-                    <span class="menu-btn-icon">⚙️</span>
-                    <span>Difficulty Select</span>
                 </button>
             </a>
             <a href="/leaderboard" style="text-decoration: none; width: 100%;">

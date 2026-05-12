@@ -24,6 +24,7 @@ app = Flask(__name__)
 app.secret_key = "kiai-aina-dev-key"
 
 TEAM_SIZE = 3
+WAVE_LIMITS = {"easy": 3, "normal": 5, "hard": 8, "infinite": None}
 LEADERBOARD_FILE = Path(__file__).resolve().parent / "data" / "leaderboard.json"
 
 # Load environment variables
@@ -346,7 +347,7 @@ def battle_start():
     all_species = get_all_species()
     wave = generate_wave(session["wave_num"], all_species)
 
-    battle_state = init_battle(selected, wave, all_species)
+    battle_state = init_battle(selected, wave, all_species, difficulty=session.get("difficulty", "normal"))
     session["battle"] = battle_state
     return redirect(url_for("battle"))
 
@@ -560,6 +561,10 @@ def result():
 def next_wave():
     if session.get("game_over"):
         return redirect(url_for("end"))
+    difficulty = session.get("difficulty", "normal")
+    wave_limit = WAVE_LIMITS.get(difficulty)
+    if wave_limit and session.get("wave_num", 1) >= wave_limit:
+        return redirect(url_for("end"))
     session["wave_num"] = session.get("wave_num", 1) + 1
     session.pop("battle", None)
     return redirect(url_for("game"))
@@ -687,11 +692,11 @@ def save_score():
     player_name = data.get("player_name", "Anonymous").strip()
     email = data.get("email", "").strip()
     
-    if not player_name or not email:
-        return jsonify({"success": False, "message": "Name and email required"}), 400
-    
-    # Validate email format (basic validation)
-    if "@" not in email or "." not in email:
+    if not player_name:
+        return jsonify({"success": False, "message": "Name required"}), 400
+
+    # Validate email format only if provided
+    if email and ("@" not in email or "." not in email):
         return jsonify({"success": False, "message": "Invalid email format"}), 400
     
     score = session.get("score", 0)

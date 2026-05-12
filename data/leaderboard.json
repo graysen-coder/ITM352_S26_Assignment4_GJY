@@ -1,1 +1,42 @@
-[]
+[
+  {
+    "player_name": "jadons",
+    "email": "",
+    "score": 2875,
+    "waves_survived": 7,
+    "difficulty": "infinite",
+    "date": "2026-05-11T20:45:42.351383"
+  },
+  {
+    "player_name": "madi",
+    "email": "",
+    "score": 1053,
+    "waves_survived": 4,
+    "difficulty": "infinite",
+    "date": "2026-05-11T20:53:45.198118"
+  },
+  {
+    "player_name": "Yuki",
+    "email": "",
+    "score": 658,
+    "waves_survived": 4,
+    "difficulty": "infinite",
+    "date": "2026-05-11T20:43:10.119997"
+  },
+  {
+    "player_name": "graysen",
+    "email": "goumi@hawaii.edu",
+    "score": 0,
+    "waves_survived": 1,
+    "difficulty": "infinite",
+    "date": "2026-05-11T19:50:56.902782"
+  },
+  {
+    "player_name": "madi",
+    "email": "",
+    "score": 0,
+    "waves_survived": 1,
+    "difficulty": "infinite",
+    "date": "2026-05-11T20:52:57.708097"
+  }
+]

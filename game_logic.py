@@ -2,6 +2,13 @@ import json
 import random
 from species import Species, Wave, Move
 
+DIFFICULTY_SETTINGS = {
+    "easy":     {"health_mult": 0.7,  "attack_mult": 0.8},
+    "normal":   {"health_mult": 1.0,  "attack_mult": 1.0},
+    "hard":     {"health_mult": 1.3,  "attack_mult": 1.25},
+    "infinite": {"health_mult": 1.5,  "attack_mult": 1.4},
+}
+
 
 def _species_from_entry(entry):
     raw_moves = entry.get("moves", [])
@@ -116,11 +123,16 @@ def init_battle(
     team_names,
     wave,
     all_species,
+    difficulty="normal",
 ):
     """
     Build a plain-dict battle state (JSON-serializable for Flask session).
     Energy starts at 5, gains 3 per turn, caps at 10.
     """
+    settings = DIFFICULTY_SETTINGS.get(difficulty, DIFFICULTY_SETTINGS["normal"])
+    health_mult = settings["health_mult"]
+    attack_mult = settings["attack_mult"]
+
     species_map = {s.name: s for s in all_species}
 
     team = [
@@ -132,8 +144,8 @@ def init_battle(
     invaders = [
         {
             "name": inv.name,
-            "hp": inv.health,
-            "max_hp": inv.health,
+            "hp": max(1, int(inv.health * health_mult)),
+            "max_hp": max(1, int(inv.health * health_mult)),
             "weak_to": inv.weak_to,
             "strong_against": inv.strong_against,
         }
@@ -147,6 +159,7 @@ def init_battle(
         "active_idx": 0,
         "invaders": invaders,
         "invader_idx": 0,
+        "attack_mult": attack_mult,
         "energy": 5,
         "max_energy": 10,
         "energy_regen": 3,
@@ -221,7 +234,7 @@ def process_turn(
 
     # Invader counter-attacks if still alive
     if inv_state["hp"] > 0 and inv_species:
-        inv_dmg = int(inv_species.attack * battle_state["difficulty"])
+        inv_dmg = int(inv_species.attack * battle_state["difficulty"] * battle_state.get("attack_mult", 1.0))
         active_hp_before = active["hp"]
         active["hp"] = max(0, active["hp"] - inv_dmg)
         actual_invader_damage = active_hp_before - active["hp"]
