@@ -48,6 +48,22 @@
     "date": "2026-05-11T22:09:45.294680"
   },
   {
+    "player_name": "Tester",
+    "email": "",
+    "score": 999,
+    "waves_survived": 1,
+    "difficulty": "infinite",
+    "date": "2026-05-12T12:03:50.464174"
+  },
+  {
+    "player_name": "Tester",
+    "email": "",
+    "score": 999,
+    "waves_survived": 1,
+    "difficulty": "infinite",
+    "date": "2026-05-12T12:03:50.487368"
+  },
+  {
     "player_name": "Yuki",
     "email": "",
     "score": 658,

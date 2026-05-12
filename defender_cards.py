@@ -1,3 +1,9 @@
+#ITM352 Assignment 4
+#Kiai Aina: Guardians of the Land
+#Names: Yuki, Jadon, Graysen
+#This file contains code to scrape the DLNR Native Birds index and species pages 
+# to build the home-picker cards for the game.
+
 """
 Scrape DLNR Native Birds index + species pages for home-picker cards.
 https://dlnr.hawaii.gov/wildlife/birds/
@@ -27,12 +33,17 @@ KEY_BY_SLUG: dict[str, str] = {
 }
 
 
+# This function creates and returns a requests Session with the project's user agent header set,
+# so all HTTP requests made by this script identify themselves consistently
 def _session() -> requests.Session:
     http_session = requests.Session()
     http_session.headers.update({"User-Agent": USER_AGENT})
     return http_session
 
 
+# This function selects the best image URL from a srcset attribute by preferring the 768px-wide
+# version if available, otherwise picking the largest width found
+# Falls back to the plain src if no srcset is provided or none of the entries can be parsed
 def _pick_best_thumbnail(src: str, srcset: str | None) -> str:
     if not srcset:
         return src
@@ -57,8 +68,10 @@ def _pick_best_thumbnail(src: str, srcset: str | None) -> str:
     return src
 
 
+# This function searches the index page soup for the anchor tag matching a given bird slug,
+# then walks up the DOM to find the nearest image and returns the best thumbnail URL
+# along with the cleaned profile URL for that species
 def _listing_thumbnail_and_profile(soup: BeautifulSoup, slug: str) -> tuple[str, str]:
-    """Return best thumbnail URL + profile URL for a bird slug from index page."""
     needle = f"/wildlife/birds/{slug}/"
     for anchor in soup.find_all("a", href=True):
         if needle not in anchor["href"]:
@@ -77,8 +90,9 @@ def _listing_thumbnail_and_profile(soup: BeautifulSoup, slug: str) -> tuple[str,
     raise ValueError(f"No listing thumbnail + link for slug={slug!r}")
 
 
+# This function finds the "Names" section on a species detail page and extracts the ʻŌlelo Hawaiʻi name,
+# the common English name, and the raw scientific name line from the list items under that heading
 def _parse_names_section(soup: BeautifulSoup) -> tuple[str | None, str | None, str | None]:
-    """Returns (olelo, common, scientific_display)."""
     names_header = None
     for heading in soup.find_all("h4"):
         if heading.get_text(strip=True).lower() == "names":
@@ -104,6 +118,8 @@ def _parse_names_section(soup: BeautifulSoup) -> tuple[str | None, str | None, s
     return olelo, common, scientific_line
 
 
+# This function builds the full display name for a species by combining the ʻŌlelo and common names
+# from the Names section, falling back to the page's h2 heading or a generic label if neither is found
 def _display_name_from_detail(soup: BeautifulSoup) -> str:
     olelo, common, _ = _parse_names_section(soup)
     if olelo and common:
@@ -116,20 +132,20 @@ def _display_name_from_detail(soup: BeautifulSoup) -> str:
     return "Native bird"
 
 
+# This function returns the portion of a display name before the first comma,
+# which is used as the shorter card title shown in the game UI
 def _short_name_before_comma(full: str) -> str:
-    """Card title: substring before the first comma, else full string trimmed."""
     full_text = (full or "").strip()
     if "," in full_text:
         return full_text.split(",", 1)[0].strip()
     return full_text
 
 
+# This function builds the card display fields for a given species slug by combining the full
+# display name, short card name, common name line, and scientific name line
+# It handles the ʻIʻiwi slug as a special case, using a fixed common name and trimming
+# the scientific name to just the first binomial before any comma
 def _card_fields_for_slug(slug: str, detail_soup: BeautifulSoup) -> dict[str, str]:
-    """
-    card_name: short title (before comma).
-    common_line: 'Common: …' (ʻIʻiwi uses fixed Scarlet Honeycreeper).
-    scientific: 'Scientific: …' (ʻIʻiwi: first binomial before comma only).
-    """
     full_display = _display_name_from_detail(detail_soup)
     card_name = _short_name_before_comma(full_display)
     _, common, sci_raw = _parse_names_section(detail_soup)
@@ -157,8 +173,9 @@ def _card_fields_for_slug(slug: str, detail_soup: BeautifulSoup) -> dict[str, st
     }
 
 
+# This function returns a hardcoded list of minimal card dicts for all six defender species,
+# used as a fallback when the DLNR scrape fails so the game can still run without live data
 def _fallback_cards() -> list[dict[str, Any]]:
-    """Return minimal fallback data when scraping fails."""
     fallback_data = {
         "nene": {"display_name": "Nēnē", "card_name": "Nēnē", "scientific": "Scientific: (unavailable)"},
         "iiwi": {"display_name": "ʻIʻiwi", "card_name": "ʻIʻiwi", "scientific": "Scientific: (unavailable)"},
@@ -182,12 +199,12 @@ def _fallback_cards() -> list[dict[str, Any]]:
     return cards
 
 
+# This function fetches the DLNR birds index page and then each species detail page in order,
+# scraping the thumbnail image, profile URL, and card fields for all six defender species
+# and returning them as a list of card dicts
+# If any part of the scrape fails it catches the exception, prints a warning, and returns
+# the hardcoded fallback cards instead so the game can still load
 def fetch_home_species_cards(timeout: int = 45) -> list[dict[str, Any]]:
-    """
-    Build six card dicts with:
-    key, display_name (full), card_name, common_line, scientific, profile_url, image_url.
-    Returns fallback data if scraping fails.
-    """
     try:
         http_session = _session()
         index_response = http_session.get(BIRDS_INDEX_URL, timeout=timeout)
@@ -224,8 +241,11 @@ def fetch_home_species_cards(timeout: int = 45) -> list[dict[str, Any]]:
 _home_species_cache: list[dict[str, Any]] | None = None
 
 
+# This function returns the cached list of home species cards, fetching and caching them on the
+# first call or when refresh=True is passed
+# If the fetch fails it stores and returns the fallback cards instead so subsequent calls
+# don't keep retrying a broken network request
 def get_home_species_cards(refresh: bool = False) -> list[dict[str, Any]]:
-    """Cached scrape (one fetch per process unless refresh=True). Returns fallback if scraping fails."""
     global _home_species_cache
     if _home_species_cache is None or refresh:
         try:
@@ -240,8 +260,12 @@ def get_home_species_cards(refresh: bool = False) -> list[dict[str, Any]]:
 DEFENDER_NATIVE_NAMES_ORDERED: list[str] = list(SLUGS_ORDERED)
 
 
+# This function builds and returns a dict mapping each defender slug to its display metadata
+# by pulling from the cached species cards, used by the game templates to show card names,
+# images, profile links, and scientific names for each defender
+# If the card fetch fails it catches the exception and returns a minimal fallback dict
+# with just the slug title-cased so the game can still render without live data
 def get_dlnr_meta_by_native_name(refresh: bool = False) -> dict[str, dict[str, Any]]:
-    """Map defenders.json ``name`` -> display fields for defender cards. Returns fallback if scraping fails."""
     try:
         cards = get_home_species_cards(refresh=refresh)
         return {

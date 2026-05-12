@@ -73,25 +73,34 @@ SKIP_SUBSECTION_TITLES = frozenset(
 )
 
 
+# This function creates and returns a requests Session with the project's user agent header set,
+# so all HTTP requests made by this script identify themselves consistently
 def _session() -> requests.Session:
     http_session = requests.Session()
     http_session.headers.update({"User-Agent": USER_AGENT})
     return http_session
-
-
+ 
+ 
+# This function deterministically generates health and attack stats for a given invader slug
+# by hashing the slug with SHA-256 and using two bytes of the digest to produce values
+# within fixed gameplay ranges (health 48-99, attack 22-59)
 def _game_stats(seed: str) -> tuple[int, int]:
     digest_bytes = hashlib.sha256(seed.encode("utf-8")).digest()
     health = 48 + (digest_bytes[0] % 52)
     attack = 22 + (digest_bytes[1] % 38)
     return health, attack
-
-
+ 
+ 
+# This function converts a species display name into a URL-safe slug by lowercasing it,
+# stripping Hawaiian okina characters, and replacing non-alphanumeric characters with hyphens
 def _slugify(label: str) -> str:
     slug_text = label.lower().replace("ʻ", "").replace("'", "").replace("`", "")
     slug_text = re.sub(r"[^a-z0-9]+", "-", slug_text)
     return slug_text.strip("-") or "unknown"
-
-
+ 
+ 
+# This function extracts the last path segment of a DLNR profile URL to use as a slug
+# It returns None if the URL is missing or if the last segment is a known non-useful path component
 def _slug_from_url(url: str | None) -> str | None:
     if not url:
         return None
@@ -104,15 +113,19 @@ def _slug_from_url(url: str | None) -> str | None:
     if slug in ("hisc", "info", "wildlife", "dofaw"):
         return None
     return slug
-
-
+ 
+ 
+# This function resolves a possibly relative href into an absolute URL using the base page URL
+# It strips any fragment identifiers from the result and returns None for empty or anchor-only hrefs
 def _normalize_url(href: str | None, base: str) -> str | None:
     if not href or href.strip() in ("#",):
         return None
     normalized_url = urljoin(base, href.strip())
     return normalized_url.split("#")[0]
-
-
+ 
+ 
+# This function splits a raw species name string that may contain a parenthesized scientific name
+# into a (common name, scientific name) tuple, returning None for the scientific name if not present
 def _split_common_scientific(raw: str) -> tuple[str, str | None]:
     cleaned_text = re.sub(r"\s+", " ", (raw or "").strip())
     if "(" not in cleaned_text or ")" not in cleaned_text:
@@ -124,8 +137,10 @@ def _split_common_scientific(raw: str) -> tuple[str, str | None]:
     common = cleaned_text[:left_paren_index].strip()
     scientific = cleaned_text[left_paren_index + 1 : right_paren_index].strip()
     return common, scientific or None
-
-
+ 
+ 
+# This function extracts the plain text from the first three <td> cells of a table row
+# and returns them as a tuple of (name, regulatory status, prevention category) strings
 def _row_texts(tr) -> tuple[str, str, str]:
     cells = tr.find_all("td")
     if len(cells) < 3:
@@ -135,8 +150,10 @@ def _row_texts(tr) -> tuple[str, str, str]:
         cells[1].get_text(" ", strip=True),
         cells[2].get_text(" ", strip=True),
     )
-
-
+ 
+ 
+# This function finds the first non-anchor href link inside a table cell and returns it,
+# or returns None if the cell contains no usable links
 def _first_hisc_link(td) -> str | None:
     for a in td.find_all("a", href=True):
         href = a["href"].strip()
@@ -144,8 +161,10 @@ def _first_hisc_link(td) -> str | None:
             continue
         return href
     return None
-
-
+ 
+ 
+# This function scans the table rows to find the row indices where the Vertebrates,
+# Invertebrates, and Pathogens sections begin, raising an error if any are missing
 def _section_indices(rows: list) -> tuple[int, int, int]:
     idx_v = idx_i = idx_p = -1
     for i, tr in enumerate(rows):
@@ -164,8 +183,12 @@ def _section_indices(rows: list) -> tuple[int, int, int]:
     if idx_v < 0 or idx_i < 0 or idx_p < 0:
         raise RuntimeError("Could not find Vertebrates / Invertebrates / Pathogens table sections.")
     return idx_v, idx_i, idx_p
-
-
+ 
+ 
+# This function parses the main DLNR invasive species table from the raw HTML and returns
+# a list of invader entry dicts covering only the Vertebrates and Invertebrates sections
+# Each entry includes the slug, common and scientific names, profile URL, regulatory info,
+# generated game stats, and a basic facts list
 def _parse_table(html: str) -> list[dict[str, Any]]:
     soup = BeautifulSoup(html, "lxml")
     table = soup.find("table")
@@ -173,7 +196,7 @@ def _parse_table(html: str) -> list[dict[str, Any]]:
         raise RuntimeError("No table on invasive species profiles page.")
     rows = table.find_all("tr")
     idx_v, idx_i, idx_p = _section_indices(rows)
-
+ 
     entries: list[dict[str, Any]] = []
     for tr in rows[idx_v + 1 : idx_i] + rows[idx_i + 1 : idx_p]:
         cells = tr.find_all("td")
@@ -184,21 +207,21 @@ def _parse_table(html: str) -> list[dict[str, Any]]:
             continue
         if name_raw.lower() in SKIP_SUBSECTION_TITLES:
             continue
-
+ 
         href = _first_hisc_link(cells[0])
         profile_url = _normalize_url(href, LIST_URL)
-
+ 
         common, scientific = _split_common_scientific(name_raw)
         if not common:
             continue
-
+ 
         slug = _slug_from_url(profile_url) or _slugify(common)
-
+ 
         reg = reg_raw.strip() if reg_raw.strip() else None
         prev = prev_raw.strip() if prev_raw.strip() else None
-
+ 
         health, attack = _game_stats(slug)
-
+ 
         facts: list[str] = []
         if scientific:
             facts.append(f"{common} — {scientific}")
@@ -210,7 +233,7 @@ def _parse_table(html: str) -> list[dict[str, Any]]:
             facts.append(f"Regulatory status: {reg}")
         if prev:
             facts.append(f"Prevention / Control: {prev}")
-
+ 
         entries.append(
             {
                 "name": slug,
@@ -228,22 +251,24 @@ def _parse_table(html: str) -> list[dict[str, Any]]:
                 "facts": facts,
             }
         )
-
+ 
     return entries
-
-
+ 
+ 
+# This function converts a full invader entry dict into the minimal subset of fields
+# needed for gameplay, including the slug, stats, resistance, and a single combined fact string
 def _to_game_subset_entry(entry: dict[str, Any]) -> dict[str, Any]:
     common = entry.get("common_name") or entry.get("name")
     scientific = entry.get("scientific_name")
     url = entry.get("profile_url")
-
+ 
     if scientific:
         fact = f"{common} ({scientific})"
     else:
         fact = str(common)
     if url:
         fact = f"{fact} — {url}"
-
+ 
     return {
         "name": entry["name"],
         "health": entry["health"],
@@ -254,14 +279,13 @@ def _to_game_subset_entry(entry: dict[str, Any]) -> dict[str, Any]:
         "strong_against": ["Placeholder strength"],
         "facts": [fact],
     }
-
-
+ 
+ 
+# This function builds a full alpha set entry for an active invader by combining the gameplay
+# fields from _to_game_subset_entry with the card metadata fields used by the result and
+# compendium templates (display name, title line, scientific name, profile URL, image URL,
+# and empty placeholder lists for description and impact points to be filled in by scraping)
 def _to_alpha_entry(entry: dict[str, Any]) -> dict[str, Any]:
-    """
-    Build an active invader entry:
-    - gameplay keys from _to_game_subset_entry
-    - card metadata used in templates/result pages
-    """
     base = _to_game_subset_entry(entry)
     common = entry.get("common_name") or entry["name"]
     scientific = entry.get("scientific_name")
@@ -280,21 +304,24 @@ def _to_alpha_entry(entry: dict[str, Any]) -> dict[str, Any]:
         "impact_points": [],
         "image_url": INVADER_IMAGE_URLS.get(entry.get("name")),
     }
-
-
+ 
+ 
+# This function normalizes whitespace and common punctuation artifacts that appear in text
+# scraped from HTML, such as spaces before closing parentheses or curly quotes
 def _clean_bullet_text(text: str) -> str:
-    """Normalize whitespace/punctuation artifacts in scraped bullet text."""
     t = re.sub(r"\s+", " ", text or "").strip()
     # Trim spacing artifacts from scraped HTML.
     t = re.sub(r"\s+\)", ")", t)
     t = re.sub(r"\(\s+", "(", t)
     t = re.sub(r"\s+([,.;:!?])", r"\1", t)
-    t = t.replace("“", "\"").replace("”", "\"")
+    t = t.replace("\u201c", "\"").replace("\u201d", "\"")
     return t.rstrip(":").strip()
-
-
+ 
+ 
+# This function uses heuristics to detect whether a scraped text fragment is a section heading
+# rather than actual bullet content, returning True for empty strings, known heading labels,
+# or short fragments that lack sentence-ending punctuation
 def _is_heading_fragment(text: str) -> bool:
-    """Heuristic to skip heading-like fragments from bullet outputs."""
     t = _clean_bullet_text(text)
     if not t:
         return True
@@ -304,26 +331,31 @@ def _is_heading_fragment(text: str) -> bool:
     if len(t.split()) <= 3 and not re.search(r"[.!?]$", t):
         return True
     return False
-
-
+ 
+ 
+# This function splits paragraph-style bullet strings into individual sentence-level bullets
+# by splitting on sentence-ending punctuation followed by a capitalized word
+# It also protects abbreviations like "U.S." from being incorrectly split, and filters out
+# any resulting fragments that look like headings
 def _split_into_sentences(points: list[str]) -> list[str]:
-    """Split paragraph-like bullets into sentence bullets (used only when needed)."""
     out: list[str] = []
     for p in points:
         if not p:
             continue
         protected = p.replace("U.S.", "U__S__")
         # Split only when next segment starts like a new sentence.
-        parts = re.split(r"(?<=[.!?])\s+(?=[A-Z“\"'])", protected)
+        parts = re.split(r"(?<=[.!?])\s+(?=[A-Z\u201c\"'])", protected)
         for part in parts:
             s = _clean_bullet_text(part.replace("U__S__", "U.S."))
             if s and not _is_heading_fragment(s):
                 out.append(s)
     return out
-
-
+ 
+ 
+# This function removes bullet points from impact lists that appear to describe distribution
+# or history rather than actual impacts, using a set of known marker phrases to identify them
+# A line is only dropped if it contains a leak marker but does not mention impact or damage
 def _filter_impact_distribution_leak(points: list[str]) -> list[str]:
-    """Drop likely distribution/history lines from impact bullet lists."""
     leak_markers = (
         "native to",
         "first noticed",
@@ -341,14 +373,19 @@ def _filter_impact_distribution_leak(points: list[str]) -> list[str]:
             continue
         out.append(p)
     return out
-
-
+ 
+ 
+# This function checks whether a cleaned text string starts with a given section marker,
+# used to find the beginning of DESCRIPTION, IMPACTS, and other labeled sections
 def _is_marker(text: str, marker: str) -> bool:
     return _clean_bullet_text(text).upper().startswith(marker.upper())
-
-
+ 
+ 
+# This function extracts bullet and paragraph text from a labeled section of a profile page's
+# primary content div, starting after the element matching start_marker and stopping when
+# any of the stop_markers are encountered
+# It deduplicates results and filters out heading-like fragments before returning the list
 def _extract_section_points(primary, start_marker: str, stop_markers: tuple[str, ...]) -> list[str]:
-    """Extract bullet/paragraph points between section markers in primary-content."""
     elems = [el for el in primary.find_all(recursive=False) if getattr(el, "name", None)]
     start_idx = -1
     for i, el in enumerate(elems):
@@ -357,7 +394,7 @@ def _extract_section_points(primary, start_marker: str, stop_markers: tuple[str,
             break
     if start_idx < 0:
         return []
-
+ 
     out: list[str] = []
     for el in elems[start_idx + 1 :]:
         txt = _clean_bullet_text(el.get_text(" ", strip=True))
@@ -372,7 +409,7 @@ def _extract_section_points(primary, start_marker: str, stop_markers: tuple[str,
                     out.append(li_text)
         elif el.name == "p" and txt and not txt.isupper():
             out.append(txt)
-
+ 
     deduped: list[str] = []
     seen = set()
     for p in out:
@@ -382,20 +419,20 @@ def _extract_section_points(primary, start_marker: str, stop_markers: tuple[str,
             deduped.append(p)
     deduped = [p for p in deduped if not _is_heading_fragment(p)]
     return deduped
-
-
+ 
+ 
+# This function extracts bullet points from shortcode tab panes on profile pages that use
+# a <div data-title="..."> structure instead of plain headings (such as the CRB profile)
+# It splits the pane's text on newlines and inline "o" bullet markers, merges fragments
+# that were split by embedded links or broken tags, deduplicates, and filters heading fragments
 def _extract_tab_points(primary, tab_title: str) -> list[str]:
-    """
-    Extract points from shortcode tab panes such as:
-    <div class="su-tabs-pane" data-title="DESCRIPTION">...</div>
-    """
     pane = primary.find(
         "div",
         attrs={"data-title": re.compile(rf"^{re.escape(tab_title)}$", re.IGNORECASE)},
     )
     if not pane:
         return []
-
+ 
     text = pane.get_text("\n", strip=True).replace("\xa0", " ")
     # CRB tab panes often embed many "o ..." bullets in one long line.
     text = re.sub(r"\s+o\s+", "\n o ", text)
@@ -405,7 +442,7 @@ def _extract_tab_points(primary, tab_title: str) -> list[str]:
         cleaned = re.sub(r"^[o•\-\u2022]+\s*", "", line).strip()
         if cleaned:
             out.append(cleaned)
-
+ 
     merged: list[str] = []
     for item in out:
         t = item.strip()
@@ -421,7 +458,7 @@ def _extract_tab_points(primary, tab_title: str) -> list[str]:
                 merged[-1] = f"{merged[-1]}{t}".strip()
                 continue
         merged.append(t)
-
+ 
     deduped: list[str] = []
     seen = set()
     for p in merged:
@@ -431,12 +468,16 @@ def _extract_tab_points(primary, tab_title: str) -> list[str]:
             deduped.append(p)
     deduped = [p for p in deduped if not _is_heading_fragment(p)]
     return deduped
-
-
+ 
+ 
+# This function fetches an invader's DLNR profile page and scrapes the description and impact
+# bullet points from it using _extract_section_points as the primary method and _extract_tab_points
+# as a fallback for pages that use tabbed layouts
+# For naio-thrips specifically it also runs sentence splitting to clean up paragraph-style content,
+# and it filters out distribution/history lines that leak into the impact section
 def _fetch_profile_points(
     sess: requests.Session, url: str | None, slug: str | None = None
 ) -> tuple[list[str], list[str]]:
-    """Scrape description/impact bullets from an invader profile page."""
     if not url:
         return [], []
     r = sess.get(url, timeout=45)
@@ -445,7 +486,7 @@ def _fetch_profile_points(
     primary = soup.find("div", class_="primary-content")
     if not primary:
         return [], []
-
+ 
     description_points = _extract_section_points(
         primary,
         start_marker="DESCRIPTION",
@@ -468,18 +509,24 @@ def _fetch_profile_points(
         impact_points = _split_into_sentences(impact_points)
     impact_points = _filter_impact_distribution_leak(impact_points)
     return description_points, impact_points
-
-
+ 
+ 
+# This is the main function that orchestrates the full build process
+# It fetches the DLNR invasive species list page, parses the table into a full invader list,
+# applies a manual fix to the Axis Deer entry, and writes the full list to invaders_list.json
+# It then builds the alpha set by taking only the active invaders, scraping each one's profile
+# page for description and impact bullets (substituting hardcoded overrides for CRB),
+# and writing the enriched entries to invaders_set_alpha.json
 def main() -> None:
     root = Path(__file__).resolve().parent
     out_path = root / FULL_SET_PATH
     alpha_out_path = root / ALPHA_SET_PATH
-
+ 
     sess = _session()
     r = sess.get(LIST_URL, timeout=60)
     r.raise_for_status()
     entries = _parse_table(r.text)
-
+ 
     axis = next((e for e in entries if e.get("common_name") == "Axis Deer"), None)
     if axis:
         axis["regulatory_status"] = None
@@ -488,17 +535,17 @@ def main() -> None:
             f"{axis['common_name']} — {axis['scientific_name']}",
             "Prevention / Control: BIISC Target Species",
         ]
-
+ 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with out_path.open("w", encoding="utf-8") as f:
         json.dump(entries, f, ensure_ascii=False, indent=2)
         f.write("\n")
-
+ 
     by_name = {e["name"]: e for e in entries}
     missing = [n for n in ACTIVE_INVADER_NAMES if n not in by_name]
     if missing:
         raise RuntimeError(f"Missing active invaders in scraped set: {missing}")
-
+ 
     alpha_entries = []
     for n in ACTIVE_INVADER_NAMES:
         alpha = _to_alpha_entry(by_name[n])
@@ -512,10 +559,10 @@ def main() -> None:
     with alpha_out_path.open("w", encoding="utf-8") as f:
         json.dump(alpha_entries, f, ensure_ascii=False, indent=2)
         f.write("\n")
-
+ 
     print(f"Wrote {len(entries)} invaders to {out_path}")
     print(f"Wrote {len(alpha_entries)} active invaders to {alpha_out_path}")
-
-
+ 
+ 
 if __name__ == "__main__":
     main()

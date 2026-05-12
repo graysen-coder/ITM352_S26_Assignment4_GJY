@@ -1,3 +1,9 @@
+#ITM352 Assignment 4
+#Kiai Aina: Guardians of the Land
+#Names: Yuki, Jadon, Graysen
+#This file contains the core game logic for our battle system
+# including loading species data, generating invader waves, battle state, turns, and wave scoring
+
 import json
 import random
 from species import Species, Wave, Move
@@ -10,6 +16,8 @@ DIFFICULTY_SETTINGS = {
 }
 
 
+# This function takes a single JSON entry dict and constructs a Species object from it,
+# converting the raw moves list into Move objects before passing everything to the Species constructor
 def _species_from_entry(entry):
     raw_moves = entry.get("moves", [])
     moves = [
@@ -29,8 +37,9 @@ def _species_from_entry(entry):
     )
 
 
+# This function loads all species from both the defenders and invaders JSON files and returns
+# them as a single combined list of Species objects, silently skipping any file that doesn't exist
 def load_species(natives_path="data/defenders.json", invaders_path="data/invaders_set_alpha.json"):
-    """Load natives (with moves) from defenders.json and invaders from invaders_set_alpha.json."""
     species_list = []
     for path in (natives_path, invaders_path):
         try:
@@ -43,8 +52,9 @@ def load_species(natives_path="data/defenders.json", invaders_path="data/invader
     return species_list
 
 
+# This function loads native species from the defenders JSON file and returns only those
+# whose habitat list overlaps with the given home's habitat set
 def load_natives_for_home(home_habitats, natives_path="data/defenders.json"):
-    """Return native Species whose habitats overlap with the given home's habitat set."""
     try:
         with open(natives_path, "r", encoding="utf-8") as f:
             data = json.load(f)
@@ -58,8 +68,10 @@ def load_natives_for_home(home_habitats, natives_path="data/defenders.json"):
     ]
 
 
+# This function loads native defenders from the JSON file and returns them as Species objects
+# in the same order as the provided names list, used to maintain consistent display ordering
+# on the roster and team selection screens
 def load_defender_natives_ordered(names: list[str], natives_path="data/defenders.json"):
-    """Return native Species in the same order as ``names`` (for roster screens)."""
     try:
         with open(natives_path, "r", encoding="utf-8") as f:
             data = json.load(f)
@@ -74,6 +86,8 @@ def load_defender_natives_ordered(names: list[str], natives_path="data/defenders
     return out
 
 
+# This function loads and returns all invader Species objects from the invaders JSON file,
+# returning an empty list if the file doesn't exist
 def load_invaders(filepath="data/invaders_set_alpha.json"):
     try:
         with open(filepath, "r", encoding="utf-8") as f:
@@ -83,6 +97,9 @@ def load_invaders(filepath="data/invaders_set_alpha.json"):
         return []
 
 
+# This function generates an invader wave for the given wave number by randomly sampling
+# from the loaded invaders, scaling the number of invaders and the difficulty multiplier
+# based on how far into the run the player is
 def generate_wave(wave_num, all_species):
     invaders = load_invaders()
     if not invaders:
@@ -95,17 +112,18 @@ def generate_wave(wave_num, all_species):
     return Wave(wave_num=wave_num, invaders=selected, difficulty=difficulty)
 
 
+# This function looks up a raw entity name in an optional display name map and returns
+# the mapped display name if found, or the raw name unchanged if not
 def _display_entity_name(raw_name: str, name_map: dict[str, str] | None) -> str:
     if name_map and raw_name in name_map:
         return name_map[raw_name]
     return raw_name
 
 
+# This function replaces the defender slug prefix in a raw move name with the card display name
+# so move labels shown in the battle log use the proper formatted name instead of the slug
+# For example "nene Move 2" becomes "Nēnē Move 2"
 def _display_move_name(raw_move_name: str, defender_slug: str, defender_label: str) -> str:
-    """
-    Replace the defender-name prefix in move labels with card display name.
-    Example: "Nene Move 2" -> "Nēnē Move 2"
-    """
     base_variants = {
         defender_slug,
         defender_slug.replace("_", " "),
@@ -119,16 +137,16 @@ def _display_move_name(raw_move_name: str, defender_slug: str, defender_label: s
     return raw_move_name
 
 
+# This function builds and returns the initial battle state dict from the selected team names,
+# the generated wave, and the chosen difficulty setting
+# It applies health and attack multipliers to invaders based on difficulty, sets starting energy
+# to 5 with a cap of 10 and regen of 3 per turn, and initializes all analytics tracking fields
 def init_battle(
     team_names,
     wave,
     all_species,
     difficulty="normal",
 ):
-    """
-    Build a plain-dict battle state (JSON-serializable for Flask session).
-    Energy starts at 5, gains 3 per turn, caps at 10.
-    """
     settings = DIFFICULTY_SETTINGS.get(difficulty, DIFFICULTY_SETTINGS["normal"])
     health_mult = settings["health_mult"]
     attack_mult = settings["attack_mult"]
@@ -182,6 +200,12 @@ def init_battle(
     }
 
 
+# This function resolves a single player turn by applying the chosen move's damage to the current
+# invader, then having the invader counter-attack the active defender if it's still alive
+# It updates all analytics fields, advances the invader or defender index if either faints,
+# sets battle_over and player_won accordingly, regenerates energy if the battle continues,
+# and appends log messages trimmed to the last 8 entries
+# The function mutates battle_state in place and no-ops if the move is invalid or unaffordable
 def process_turn(
     battle_state,
     move_name,
@@ -189,10 +213,6 @@ def process_turn(
     defender_name_map: dict[str, str] | None = None,
     invader_name_map: dict[str, str] | None = None,
 ):
-    """
-    Resolve one player turn: player uses move_name, invader auto-attacks.
-    Mutates battle_state in place. No-ops on invalid moves.
-    """
     species_map = {s.name: s for s in all_species}
 
     active = battle_state["team"][battle_state["active_idx"]]
@@ -274,8 +294,9 @@ def process_turn(
     battle_state["log"] = (battle_state["log"] + log)[-8:]
 
 
+# This function calculates and returns the points earned for winning a wave based on the wave
+# number and the total remaining HP across the player's team, returning 0 if the player lost
 def score_for_wave(battle_state):
-    """Points earned for winning a wave based on wave number and remaining HP."""
     if not battle_state["player_won"]:
         return 0
     remaining_hp = sum(m["hp"] for m in battle_state["team"])
