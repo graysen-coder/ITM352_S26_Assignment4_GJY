@@ -1,4 +1,5 @@
 from pathlib import Path
+import math
 import random
 import json
 import os
@@ -8,11 +9,14 @@ from flask import Flask, render_template, request, redirect, url_for, session, j
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail, Email, To, Content
 from dotenv import load_dotenv
-from defender_cards import DEFENDER_NATIVE_NAMES_ORDERED, get_dlnr_meta_by_native_name
+from defender_cards import (
+    DEFENDER_NATIVE_NAMES_ORDERED,
+    get_dlnr_meta_by_native_name,
+    get_compendium_defender_facts_by_slug,
+)
 from invader_cards import get_invader_cards_by_name
 from game_logic import (
     load_species,
-    load_invaders,
     load_defender_natives_ordered,
     generate_wave,
     init_battle,
@@ -26,6 +30,69 @@ app.secret_key = "kiai-aina-dev-key"
 TEAM_SIZE = 3
 WAVE_LIMITS = {"easy": 3, "normal": 5, "hard": 8, "infinite": None}
 LEADERBOARD_FILE = Path(__file__).resolve().parent / "data" / "leaderboard.json"
+
+
+def compare_score_to_leaderboard(current_score: int, path: Path = LEADERBOARD_FILE) -> dict:
+    """
+    Simple stats for the /end page only in Infinite Difficulty.
+    Compares this session's total score to every score already saved on the leaderboard.
+
+    Returns a small dict used by ``end.html``:
+    - ``percentile_beaten``: What fraction of saved scores are *lower* than yours (0–100).
+    - ``mean_score``: Average of saved scores (players see a "typical" number).
+    - ``z_score``: (your score − mean) / spread (standard deviation); 
+      This template attempts to change it into plain language ("way above average", etc.), so that most can understand.
+    - ``note``: Filled when we cannot show z-score yet (i.e. empty files, one row, all ties = error handling).
+
+    Spread (standard deviation) uses the usual sample formula (divide by n−1), same idea as a spreadsheet
+    ``STDEV.S``, so z-score is only computed when n >= 2 and scores are not all identical.
+    """
+    scores: list[int] = []
+    if path.exists():
+        try:
+            with path.open(encoding="utf-8") as f:
+                data = json.load(f)
+            if isinstance(data, list):
+                for row in data:
+                    if isinstance(row, dict) and isinstance(row.get("score"), (int, float)):
+                        scores.append(int(row["score"]))
+        except (json.JSONDecodeError, OSError):
+            pass
+
+    n = len(scores)
+    out: dict = {
+        "leaderboard_count": n,
+        "percentile_beaten": None,
+        "z_score": None,
+        "mean_score": None,
+        "note": "",
+    }
+
+    if n == 0:
+        out["note"] = "Save your score on the leaderboard — then we can show how you stack up!"
+        return out
+
+    # Average saved score (shown on /end as "around X points").
+    mean = sum(scores) / n
+    out["mean_score"] = round(mean, 1)
+    # "Higher than p% of saved scores" = this many saved totals are strictly below yours.
+    below = sum(1 for s in scores if s < current_score)
+    out["percentile_beaten"] = round(100.0 * below / n, 1)
+
+    if n < 2:
+        out["note"] = "When a few more people save scores, we can tell if you were above or below \"usual.\""
+        return out
+
+    # Sample standard deviation — need spread > 0 or z = (score − mean) / std is meaningless.
+    variance = sum((s - mean) ** 2 for s in scores) / (n - 1)
+    std = math.sqrt(variance)
+    if std == 0:
+        out["note"] = "Right now every saved score is the same, so we can't say above or below average yet."
+        return out
+
+    out["z_score"] = round((current_score - mean) / std, 2)
+    return out
+
 
 # Load environment variables
 load_dotenv()
@@ -205,7 +272,7 @@ def notify_beaten_scores(new_entry, leaderboard):
 
 def _build_run_chart(run_history: list[dict]) -> bool:
     """
-    Build a static run chart image using pandas + matplotlib.
+    Build a static run chart image (damage by wave lines only) using pandas + matplotlib.
     Returns True when chart file was written, False if charting is unavailable.
     """
     if not run_history:
@@ -227,22 +294,14 @@ def _build_run_chart(run_history: list[dict]) -> bool:
             df[col] = 0
     df = df.sort_values("wave_num")
 
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(9, 7), constrained_layout=True)
-
-    colors = ["#2d6a4f" if bool(v) else "#c0392b" for v in df.get("player_won", [])]
-    ax1.bar(df["wave_num"], df["points"], color=colors)
-    ax1.set_title("Points by Wave")
-    ax1.set_xlabel("Wave")
-    ax1.set_ylabel("Points")
-    ax1.grid(axis="y", alpha=0.25)
-
-    ax2.plot(df["wave_num"], df["damage_dealt"], marker="o", color="#2563eb", label="Damage Dealt")
-    ax2.plot(df["wave_num"], df["damage_taken"], marker="o", color="#dc2626", label="Damage Taken")
-    ax2.set_title("Damage Trend by Wave")
-    ax2.set_xlabel("Wave")
-    ax2.set_ylabel("Damage")
-    ax2.grid(alpha=0.25)
-    ax2.legend()
+    fig, ax = plt.subplots(1, 1, figsize=(9, 4.5), constrained_layout=True)
+    ax.plot(df["wave_num"], df["damage_dealt"], marker="o", color="#2563eb", label="Damage Dealt")
+    ax.plot(df["wave_num"], df["damage_taken"], marker="o", color="#dc2626", label="Damage Taken")
+    ax.set_title("Damage Trend by Wave")
+    ax.set_xlabel("Wave")
+    ax.set_ylabel("Damage")
+    ax.grid(alpha=0.25)
+    ax.legend()
 
     out_path = Path(__file__).resolve().parent / "static" / "run_summary_chart.png"
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -597,6 +656,11 @@ def end():
     )
 
     chart_ready = _build_run_chart(run_history)
+    difficulty = session.get("difficulty", "normal")
+    # Infinite-only: friendly "how you did vs saved scores" panel (percentile, mean, z → words).
+    leaderboard_stats = None
+    if difficulty == "infinite":
+        leaderboard_stats = compare_score_to_leaderboard(session.get("score", 0), LEADERBOARD_FILE)
 
     run_analytics = {
         "total_waves": total_waves,
@@ -629,7 +693,8 @@ def end():
         run_analytics=run_analytics,
         chart_ready=chart_ready,
         chart_image_url=f"{url_for('static', filename='run_summary_chart.png')}?v={session.get('score', 0)}-{total_waves}",
-        difficulty=session.get("difficulty", "normal"),
+        difficulty=difficulty,
+        leaderboard_stats=leaderboard_stats,  # None unless Infinite; see compare_score_to_leaderboard
         bg_pic=background_image,
     )
 
@@ -640,20 +705,25 @@ def compendium():
     # Load defenders with metadata
     natives = load_defender_natives_ordered(DEFENDER_NATIVE_NAMES_ORDERED)
     dlnr_meta = get_dlnr_meta_by_native_name()
-    
+    # Live DLNR paragraphs for compendium cards (empty → use defenders.json "facts" below).
+    compendium_facts_by_slug = get_compendium_defender_facts_by_slug()
+
     defenders_data = []
     for s in natives:
         m = dlnr_meta.get(s.name, {})
+        scraped_facts = compendium_facts_by_slug.get(s.name) or []
+        facts_for_card = scraped_facts if scraped_facts else s.facts
         defenders_data.append(
             {
                 "name": s.name,
                 "display_name": m.get("display_name") or s.name.replace("_", " "),
                 "common_line": m.get("common_line", ""),
                 "image_url": m.get("image_url", ""),
+                "profile_url": m.get("profile_url", ""),
                 "scientific": m.get("scientific", ""),
                 "health": s.health,
                 "attack": s.attack,
-                "facts": s.facts,
+                "facts": facts_for_card,
             }
         )
     
@@ -672,6 +742,7 @@ def compendium():
                 "facts": card.get("facts", []),
                 "description_points": card.get("description_points", []),
                 "image_url": card.get("image_url", ""),
+                "profile_url": card.get("profile_url") or "",
             }
         )
     

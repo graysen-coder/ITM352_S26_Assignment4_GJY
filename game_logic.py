@@ -43,21 +43,6 @@ def load_species(natives_path="data/defenders.json", invaders_path="data/invader
     return species_list
 
 
-def load_natives_for_home(home_habitats, natives_path="data/defenders.json"):
-    """Return native Species whose habitats overlap with the given home's habitat set."""
-    try:
-        with open(natives_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-    except FileNotFoundError:
-        return []
-    home_set = set(home_habitats)
-    return [
-        _species_from_entry(e)
-        for e in data
-        if home_set & set(e.get("habitats", []))
-    ]
-
-
 def load_defender_natives_ordered(names: list[str], natives_path="data/defenders.json"):
     """Return native Species in the same order as ``names`` (for roster screens)."""
     try:
@@ -74,17 +59,14 @@ def load_defender_natives_ordered(names: list[str], natives_path="data/defenders
     return out
 
 
-def load_invaders(filepath="data/invaders_set_alpha.json"):
-    try:
-        with open(filepath, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        return [_species_from_entry(e) for e in data]
-    except FileNotFoundError:
-        return []
-
-
 def generate_wave(wave_num, all_species):
-    invaders = load_invaders()
+    invaders_path = "data/invaders_set_alpha.json"
+    try:
+        with open(invaders_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        invaders = [_species_from_entry(e) for e in data]
+    except FileNotFoundError:
+        invaders = []
     if not invaders:
         invaders = [s for s in all_species if s.is_invasive]
 

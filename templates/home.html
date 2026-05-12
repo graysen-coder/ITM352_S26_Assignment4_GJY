@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>Kiai Aina</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='kiai-readability.css') }}">
     <style>
         * {
             margin: 0;
@@ -71,13 +72,13 @@
             text-transform: uppercase;
             letter-spacing: 1px;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3), inset 0 -3px 0 rgba(0, 0, 0, 0.3);
+            box-shadow: var(--kiai-shadow-menu);
             min-height: 55px;
         }
         
         .menu-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4), inset 0 -3px 0 rgba(0, 0, 0, 0.3);
+            box-shadow: var(--kiai-shadow-menu-hover);
         }
         
         .menu-btn:active {

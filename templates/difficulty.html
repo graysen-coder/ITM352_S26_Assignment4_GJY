@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>Difficulty Select - Kiai Aina</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='kiai-readability.css') }}">
     <style>
         * {
             margin: 0;
@@ -30,7 +31,7 @@
         .header {
             text-align: center;
             color: white;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+            text-shadow: var(--kiai-text-on-bg-lg);
             margin-bottom: 50px;
         }
         
@@ -62,7 +63,7 @@
             text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            box-shadow: var(--kiai-shadow-card);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -72,11 +73,56 @@
         
         .difficulty-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
+            box-shadow: var(--kiai-shadow-card-hover);
         }
         
         .difficulty-card:active {
             transform: translateY(-2px);
+        }
+
+        button.difficulty-card {
+            font: inherit;
+            width: 100%;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .difficulty-card.selected {
+            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.95), var(--kiai-shadow-card-hover);
+            transform: translateY(-5px);
+        }
+
+        .difficulty-card:focus-visible {
+            outline: 3px solid rgba(255, 255, 255, 0.9);
+            outline-offset: 3px;
+        }
+
+        .form-actions {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        .back-button.start-button {
+            padding: 18px 56px;
+            font-size: 1.35em;
+            min-width: 240px;
+            border-radius: 8px;
+            box-shadow: var(--kiai-shadow-btn);
+        }
+
+        .back-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: var(--kiai-shadow-btn-disabled);
+        }
+
+        .back-button:disabled:hover {
+            transform: none;
+            box-shadow: var(--kiai-shadow-btn-disabled);
         }
         
         .difficulty-icon {
@@ -180,13 +226,13 @@
             font-weight: bold;
             cursor: pointer;
             text-decoration: none;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            box-shadow: var(--kiai-shadow-btn);
             transition: all 0.3s ease;
         }
         
         .back-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+            box-shadow: var(--kiai-shadow-btn-hover);
         }
         
         .back-button:active {
@@ -196,7 +242,7 @@
 
         .hint-text {
             color: white;
-            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
+            text-shadow: var(--kiai-text-on-bg);
             font-size: 1em;
             margin-bottom: 20px;
             opacity: 0.85;
@@ -230,12 +276,13 @@
             <p>Choose your challenge level</p>
         </div>
         
-        <p class="hint-text">Double-click a card to select your difficulty</p>
+        <p class="hint-text">Click a difficulty to select it, then press Start!</p>
 
-        <div class="difficulty-grid">
-            <form action="/start" method="post" style="width: 100%;">
-                <input type="hidden" name="difficulty" value="easy">
-                <button type="submit" class="difficulty-card easy" style="border: none; padding: 30px; cursor: pointer;">
+        <form id="difficulty-form" action="/start" method="post" class="difficulty-page-form">
+            <input type="hidden" name="difficulty" id="difficulty-input" value="">
+
+            <div class="difficulty-grid">
+                <button type="button" class="difficulty-card easy" data-difficulty="easy" aria-pressed="false">
                     <div class="difficulty-icon">🌱</div>
                     <div class="difficulty-name">Easy</div>
                     <div class="difficulty-description">Perfect for beginners</div>
@@ -245,11 +292,8 @@
                         <div class="stat-item"><span class="stat-label">Waves:</span> 3</div>
                     </div>
                 </button>
-            </form>
-            
-            <form action="/start" method="post" style="width: 100%;">
-                <input type="hidden" name="difficulty" value="normal">
-                <button type="submit" class="difficulty-card normal" style="border: none; padding: 30px; cursor: pointer;">
+
+                <button type="button" class="difficulty-card normal" data-difficulty="normal" aria-pressed="false">
                     <div class="difficulty-icon">🌿</div>
                     <div class="difficulty-name">Normal</div>
                     <div class="difficulty-description">Standard gameplay</div>
@@ -259,11 +303,8 @@
                         <div class="stat-item"><span class="stat-label">Waves:</span> 5</div>
                     </div>
                 </button>
-            </form>
-            
-            <form action="/start" method="post" style="width: 100%;">
-                <input type="hidden" name="difficulty" value="hard">
-                <button type="submit" class="difficulty-card hard" style="border: none; padding: 30px; cursor: pointer;">
+
+                <button type="button" class="difficulty-card hard" data-difficulty="hard" aria-pressed="false">
                     <div class="difficulty-icon">🔥</div>
                     <div class="difficulty-name">Hard</div>
                     <div class="difficulty-description">For experienced players</div>
@@ -273,11 +314,8 @@
                         <div class="stat-item"><span class="stat-label">Waves:</span> 8</div>
                     </div>
                 </button>
-            </form>
-            
-            <form action="/start" method="post" style="width: 100%;">
-                <input type="hidden" name="difficulty" value="infinite">
-                <button type="submit" class="difficulty-card infinite" style="border: none; padding: 30px; cursor: pointer;">
+
+                <button type="button" class="difficulty-card infinite" data-difficulty="infinite" aria-pressed="false">
                     <div class="difficulty-icon">♾️</div>
                     <div class="difficulty-name">Infinite</div>
                     <div class="difficulty-description">Endless waves!</div>
@@ -288,20 +326,42 @@
                         <div class="stat-item"><span class="stat-label">Leaderboard:</span> Yes</div>
                     </div>
                 </button>
-            </form>
-        </div>
-        
-        <a href="/" class="back-button">← Back to Home</a>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="back-button start-button" id="start-btn" disabled>Start!</button>
+                <a href="/" class="back-button">← Back to Home</a>
+            </div>
+        </form>
     </div>
 <script>
-    document.querySelectorAll('.difficulty-card').forEach(function(btn) {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
+(function () {
+    var form = document.getElementById('difficulty-form');
+    var input = document.getElementById('difficulty-input');
+    var startBtn = document.getElementById('start-btn');
+    var cards = document.querySelectorAll('.difficulty-card[data-difficulty]');
+
+    function setSelected(card) {
+        cards.forEach(function (c) {
+            c.classList.toggle('selected', c === card);
+            c.setAttribute('aria-pressed', c === card ? 'true' : 'false');
         });
-        btn.addEventListener('dblclick', function(e) {
-            btn.closest('form').submit();
+        input.value = card.getAttribute('data-difficulty') || '';
+        startBtn.disabled = !input.value;
+    }
+
+    cards.forEach(function (card) {
+        card.addEventListener('click', function () {
+            setSelected(card);
         });
     });
+
+    form.addEventListener('submit', function (e) {
+        if (!input.value) {
+            e.preventDefault();
+        }
+    });
+})();
 </script>
 </body>
 </html>
