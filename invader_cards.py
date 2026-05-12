@@ -1,3 +1,8 @@
+# ITM352 Assignment 4
+# Kiai Aina: Guardians of the Land
+# Names: Yuki, Jadon, Graysen
+# This file contains the invader card data and loading logic for the game. It reads from a cached JSON file 
+# containing invader card information, including facts, description points, impact points, and images
 """Invader card data from data/invaders_set_alpha.json (cached).
 
 Bullets in description_points / impact_points come from the DLNR scraper in

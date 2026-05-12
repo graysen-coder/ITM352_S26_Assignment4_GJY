@@ -1,3 +1,8 @@
+# ITM352 Assignment 4
+# Kiai Aina: Guardians of the Land
+# Names: Yuki, Jadon, Graysen
+# This file contains the main Flask app for the game and handles routing, session management,
+# leaderboard storage, and email notifications
 """
 Defender card metadata from live DLNR Native Birds pages (runtime web scrape).
 
@@ -40,15 +45,18 @@ KEY_BY_SLUG: dict[str, str] = {
 }
 
 
+# This function creates and returns a requests Session with the project's user agent header set
+# so all HTTP requests identify themselves as an educational project rather than a blank bot
 def _session() -> requests.Session:
-    """Create a reusable web client and tell DLNR we are a small educational project (not a blank bot)."""
     http_session = requests.Session()
     http_session.headers.update({"User-Agent": USER_AGENT})
     return http_session
 
 
+# This function selects the best image URL from a srcset attribute by preferring the 768px-wide
+# version if available, otherwise picking the largest width found
+# Falls back to the plain src if no srcset is provided or none of the entries can be parsed
 def _pick_best_thumbnail(src: str, srcset: str | None) -> str:
-    """Pick the sharpest image URL from an HTML ``srcset`` list (or fall back to ``src``)."""
     if not srcset:
         return src
     best_url = None
@@ -72,8 +80,10 @@ def _pick_best_thumbnail(src: str, srcset: str | None) -> str:
     return src
 
 
+# This function searches the index page soup for the anchor tag matching a given bird slug,
+# then walks up the DOM to find the nearest image and returns the best thumbnail URL
+# along with the cleaned profile URL for that species
 def _listing_thumbnail_and_profile(soup: BeautifulSoup, slug: str) -> tuple[str, str]:
-    """From the birds index page, find the small photo URL and full profile link for one slug."""
     needle = f"/wildlife/birds/{slug}/"
     for anchor in soup.find_all("a", href=True):
         if needle not in anchor["href"]:
@@ -92,8 +102,9 @@ def _listing_thumbnail_and_profile(soup: BeautifulSoup, slug: str) -> tuple[str,
     raise ValueError(f"No listing thumbnail + link for slug={slug!r}")
 
 
+# This function finds the "Names" section on a species detail page and extracts the ʻŌlelo Hawaiʻi name,
+# the common English name, and the raw scientific name line from the list items under that heading
 def _parse_names_section(soup: BeautifulSoup) -> tuple[str | None, str | None, str | None]:
-    """Read the bird's ``Names`` block: Hawaiian (ōlelo), English common name, and scientific line."""
     names_header = None
     for heading in soup.find_all("h4"):
         if heading.get_text(strip=True).lower() == "names":
@@ -119,8 +130,9 @@ def _parse_names_section(soup: BeautifulSoup) -> tuple[str | None, str | None, s
     return olelo, common, scientific_line
 
 
+# This function builds the full display name for a species by combining the ʻŌlelo and common names
+# from the Names section, falling back to the page's h2 heading or a generic label if neither is found
 def _display_name_from_detail(soup: BeautifulSoup) -> str:
-    """Build the long title shown on cards (Hawaiian + common, or page heading as backup)."""
     olelo, common, _ = _parse_names_section(soup)
     if olelo and common:
         return f"{olelo}, {common}"
@@ -132,19 +144,20 @@ def _display_name_from_detail(soup: BeautifulSoup) -> str:
     return "Native bird"
 
 
+# This function returns the portion of a display name before the first comma,
+# which is used as the shorter card title shown in the game UI
 def _short_name_before_comma(full: str) -> str:
-    """Short card title: text before the first comma, or the whole string if there is no comma."""
     full_text = (full or "").strip()
     if "," in full_text:
         return full_text.split(",", 1)[0].strip()
     return full_text
 
 
+# This function builds the card display fields for a given species slug by combining the full
+# display name, short card name, common name line, and scientific name line
+# It handles the ʻIʻiwi slug as a special case, using a fixed common name and trimming
+# the scientific name to just the first binomial before any comma
 def _card_fields_for_slug(slug: str, detail_soup: BeautifulSoup) -> dict[str, str]:
-    """
-    Turn one profile page into display strings: full name, short name, common line,
-    and scientific line. The ʻIʻiwi row uses a hand-tuned common name and shorter science text.
-    """
     full_display = _display_name_from_detail(detail_soup)
     card_name = _short_name_before_comma(full_display)
     _, common, sci_raw = _parse_names_section(detail_soup)
@@ -179,26 +192,26 @@ _TRAILING_PC_CREDIT = re.compile(r"\s+PC\s*:.*$", re.I)
 _TRAILING_PC_CREDIT_PAREN = re.compile(r"\s*\(\s*PC\s*:.*$", re.I)
 
 
+# This function returns True if the entire text line is a photo credit caption starting with "PC:",
+# used to filter out image attribution lines before adding text to the compendium facts list
 def _is_standalone_photo_credit(text: str) -> bool:
-    """True when the whole line is only a picture-credit caption (starts with ``PC:``)."""
     t = (text or "").strip()
     return bool(t) and bool(re.match(r"^PC\s*:", t, re.I))
 
 
+# This function strips trailing photo credit fragments (e.g. " PC: Name" or " (PC: Name)")
+# from the end of a scraped sentence so they don't appear in the compendium bullet text
 def _strip_trailing_photo_credit(text: str) -> str:
-    """Remove trailing `` PC: …`` or `` (PC: …)`` from a sentence scraped with the narrative."""
     s = (text or "").strip()
     s = _TRAILING_PC_CREDIT.sub("", s).strip()
     s = _TRAILING_PC_CREDIT_PAREN.sub("", s).strip()
     return s
 
 
+# This function scans all h4 tags in the page and returns the one whose text matches the given
+# title (case-insensitive), used to locate section headings like "Conservation Status" and
+# "Species Information" on DLNR bird profile pages
 def _h4_by_heading_text(root: BeautifulSoup, title: str):
-    """
-    Bird profiles use ``<h4>Conservation Status</h4>`` style headings. This scans
-    all h4 tags and returns the one whose visible text matches ``title`` (ignores
-    capital letters). Returns None if that section does not exist on this page.
-    """
     want = title.strip().lower()
     for h in root.find_all("h4"):
         if h.get_text(" ", strip=True).lower() == want:
@@ -206,11 +219,10 @@ def _h4_by_heading_text(root: BeautifulSoup, title: str):
     return None
 
 
+# This function finds the "Conservation Status" section on a profile page and returns the single
+# list item that mentions "State Listed" (e.g. endangered or threatened), or None if not found
+# Federal status is intentionally excluded to keep the focus kama'aina-centered
 def _extract_state_listed_conservation_line(root: BeautifulSoup) -> str | None:
-    """
-    Pull the single bullet that starts with State Listed (i.e. endangered / threatened).
-    I opted to not use Federal status because this is more kama'aina focused.
-    """
     h = _h4_by_heading_text(root, "Conservation Status")
     if not h:
         return None
@@ -230,10 +242,9 @@ def _extract_state_listed_conservation_line(root: BeautifulSoup) -> str | None:
     return None
 
 
+# This function collects all paragraph text from the "Species Information" section of a profile page,
+# skipping any standalone photo credit lines, and joins them into a single text blob
 def _species_information_blob_after_h4(root: BeautifulSoup) -> str:
-    """
-    Get the "Species Information" text.
-    """
     h = _h4_by_heading_text(root, "Species Information")
     if not h:
         return ""
@@ -254,10 +265,10 @@ def _species_information_blob_after_h4(root: BeautifulSoup) -> str:
     return " ".join(parts)
 
 
+# This function splits a blob of Species Information text into individual sentences and returns
+# the first n of them, stripping trailing photo credits and skipping fragments shorter than
+# 12 characters or that are themselves standalone photo credit lines
 def _first_n_sentences(blob: str, n: int) -> list[str]:
-    """
-    Scraping only the first few sentences from the "Species Information" text.
-    """
     blob = re.sub(r"\s+", " ", (blob or "").strip())
     if not blob:
         return []
@@ -275,12 +286,10 @@ def _first_n_sentences(blob: str, n: int) -> list[str]:
     return out[:n]
 
 
+# This function builds the list of fact bullets shown on the Species Compendium for one native bird
+# by combining the state conservation status line with the first three sentences of the Species
+# Information section scraped from its DLNR profile page
 def _compendium_facts_from_profile_soup(detail_soup: BeautifulSoup) -> list[str]:
-    """
-    Build the bullet list shown on the Species Compendium for one native bird.
-
-    The HTML template adds a separate "Find out more here" hyperlink to the DLNR page.
-    """
     # Main article body; if the site layout changes, fall back to searching the whole page.
     root = detail_soup.find("div", class_="primary-content") or detail_soup
     out: list[str] = []
@@ -292,8 +301,9 @@ def _compendium_facts_from_profile_soup(detail_soup: BeautifulSoup) -> list[str]
     return out
 
 
+# This function returns a hardcoded list of minimal card dicts for all six defender species,
+# used as a fallback when the DLNR scrape fails so the game can still run without live data
 def _fallback_cards() -> list[dict[str, Any]]:
-    """When DLNR is unreachable, return safe built-in names (no photos, no off-site links)."""
     fallback_data = {
         "nene": {"display_name": "Nēnē", "card_name": "Nēnē", "scientific": "Scientific: (unavailable)"},
         "iiwi": {"display_name": "ʻIʻiwi", "card_name": "ʻIʻiwi", "scientific": "Scientific: (unavailable)"},
@@ -318,14 +328,12 @@ def _fallback_cards() -> list[dict[str, Any]]:
     return cards
 
 
+# This function fetches the DLNR birds index page and then each species detail page in order,
+# scraping the thumbnail image, profile URL, card fields, and compendium facts for all six
+# defender species and returning them as a list of card dicts
+# The compendium facts are scraped from the same page already downloaded so no extra request is needed
+# If any part of the scrape fails it catches the exception and returns the hardcoded fallback cards
 def fetch_home_species_cards(timeout: int = 45) -> list[dict[str, Any]]:
-    """
-    Scrape six bird cards: key, display_name, card_name, common_line,
-    scientific, profile_url, image_url.
-
-    On any request or parse failure, returns _fallback_cards() instead of
-    raising (offline-safe behavior for the app).
-    """
     try:
         http_session = _session()
         index_response = http_session.get(BIRDS_INDEX_URL, timeout=timeout)
@@ -365,11 +373,11 @@ def fetch_home_species_cards(timeout: int = 45) -> list[dict[str, Any]]:
 _home_species_cache: list[dict[str, Any]] | None = None
 
 
+# This function returns the cached list of home species cards, fetching and caching them on the
+# first call or when refresh=True is passed
+# If the fetch fails it stores and returns the fallback cards instead so subsequent calls
+# don't keep retrying a broken network request
 def get_home_species_cards(refresh: bool = False) -> list[dict[str, Any]]:
-    """
-    Return cached card rows from fetch_home_species_cards(), or re-scrape when
-    refresh=True. First failure in a process stores fallback rows in the cache.
-    """
     global _home_species_cache
     if _home_species_cache is None or refresh:
         try:
@@ -384,14 +392,12 @@ def get_home_species_cards(refresh: bool = False) -> list[dict[str, Any]]:
 DEFENDER_NATIVE_NAMES_ORDERED: list[str] = list(SLUGS_ORDERED)
 
 
+# This function builds and returns a dict mapping each defender slug to its display metadata
+# by pulling from the cached species cards, used by the game templates to show card names,
+# images, profile links, and scientific names for each defender
+# If the card fetch fails it catches the exception and returns a minimal fallback dict
+# with just the slug title-cased so the game can still render without live data
 def get_dlnr_meta_by_native_name(refresh: bool = False) -> dict[str, dict[str, Any]]:
-    """
-    Map defenders.json ``name`` (slug) -> display_name, common_line, scientific,
-    image_url, profile_url for templates.
-
-    Data comes from the same live scrape as get_home_species_cards; on error,
-    returns minimal per-slug placeholders (titles only, empty URLs).
-    """
     try:
         cards = get_home_species_cards(refresh=refresh)
         return {
@@ -418,13 +424,10 @@ def get_dlnr_meta_by_native_name(refresh: bool = False) -> dict[str, dict[str, A
         }
 
 
+# This function returns a dict mapping each defender slug to its list of compendium fact bullets
+# by reading the compendium_facts field from the cached species cards
+# If the list is empty for a given slug (e.g. offline mode or a page layout change), the
+# compendium route in app.py falls back to the facts list from defenders.json instead
 def get_compendium_defender_facts_by_slug(refresh: bool = False) -> dict[str, list[str]]:
-    """
-    For each bird slug (nene, iiwi, …), return the fact lines used on the Compendium.
-
-    Reads from the in-memory scrape cache (see ``compendium_facts`` on each card).
-    If that list is empty — offline mode or the website layout changed — the Flask
-    route should show the old ``facts`` list from defenders.json instead.
-    """
     cards = get_home_species_cards(refresh=refresh)
     return {slug: list(c.get("compendium_facts") or []) for slug, c in zip(SLUGS_ORDERED, cards)}
